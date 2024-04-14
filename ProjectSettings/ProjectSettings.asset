@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 26
-  productGUID: ef6af50cc6cf5d64d827782c696be980
+  productGUID: ff46884851058824b8760b6efe5ac5d0
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: projeto
+  productName: ProjetoPGMV
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -676,14 +676,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: projeto
+  metroPackageName: ProjetoPGMV
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: projeto
+  metroApplicationDescription: ProjetoPGMV
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -752,11 +752,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: d4a77bfb-6c3d-46fe-bea1-d927af8d7e21
+  cloudProjectId: a64e2a7d-faf7-4225-a695-8f8f89552110
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: projeto
-  organizationId: rafaelsilva0708
+  projectName: ProjetoPGMV
+  organizationId: cookiebeer
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
