@@ -33,9 +33,9 @@ Shader "Custom/pieceshader"
 
         void vert (inout appdata_full v){
             if(v.vertex.y >0)
-                v.vertex.xyz += v.normal * 0.3 * sin(3.5);
+                v.vertex.xyz += v.normal * 0.2 * sin(4);
             else
-                v.vertex.xyz += v.normal * 0.2 * sin(1);
+                v.vertex.xyz += v.normal * 0.2 * sin(2);
         }
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.

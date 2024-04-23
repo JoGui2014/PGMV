@@ -1,0 +1,15 @@
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\bin\Debug\net8.0\XMLReader.exe
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\bin\Debug\net8.0\XMLReader.deps.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\bin\Debug\net8.0\XMLReader.runtimeconfig.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\bin\Debug\net8.0\XMLReader.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\bin\Debug\net8.0\XMLReader.pdb
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.AssemblyInfoInputs.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.AssemblyInfo.cs
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.csproj.CoreCompileInputs.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.sourcelink.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\refint\XMLReader.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.pdb
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\XMLReader.genruntimeconfig.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\XMLReader\obj\Debug\net8.0\ref\XMLReader.dll

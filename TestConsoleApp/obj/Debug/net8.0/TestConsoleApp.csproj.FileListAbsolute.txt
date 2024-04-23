@@ -1,0 +1,15 @@
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\bin\Debug\net8.0\TestConsoleApp.exe
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\bin\Debug\net8.0\TestConsoleApp.deps.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\bin\Debug\net8.0\TestConsoleApp.runtimeconfig.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\bin\Debug\net8.0\TestConsoleApp.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\bin\Debug\net8.0\TestConsoleApp.pdb
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.AssemblyInfoInputs.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.AssemblyInfo.cs
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.csproj.CoreCompileInputs.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.sourcelink.json
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\refint\TestConsoleApp.dll
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.pdb
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\TestConsoleApp.genruntimeconfig.cache
+C:\Users\guiva\OneDrive\Documents\ISCTE\Primeiro ano Mestrado ISCTE\Segundo Semestre\PGMV\Projeto\Projeto1\PGMV\TestConsoleApp\obj\Debug\net8.0\ref\TestConsoleApp.dll
