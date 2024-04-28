@@ -30,6 +30,6 @@ public class SwitchCamera : MonoBehaviour
                 mainCamera.SetActive(true);
                 switchCam = true;
             }
+        }
     }
-}
 }

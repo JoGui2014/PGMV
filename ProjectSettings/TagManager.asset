@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - SecondaryCamera
+  - board
   layers:
   - Default
   - TransparentFX

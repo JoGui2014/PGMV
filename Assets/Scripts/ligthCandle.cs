@@ -3,27 +3,19 @@ using UnityEngine;
 public class CandleController : MonoBehaviour
 {
     public GameObject candleLight;
+    private bool isLightOn = true;
 
-
-    private bool isLightOn;
-
-    void Update()
+    void OnMouseUp()
     {
-        
-        if (Input.GetKeyDown(KeyCode.F))
+        // Alterna entre acender e apagar a luz quando o objeto é clicado
+        if (isLightOn)
         {
-            // Alterna entre acender e apagar a luz
-            if (isLightOn)
-            {
-                candleLight.SetActive(false);
-                isLightOn = false;
-            }
-            else
-            {
-                candleLight.SetActive(true);
-                isLightOn = true;
-            }
+            candleLight.SetActive(false);
+            isLightOn = false;
+        } else
+        {
+            candleLight.SetActive(true);
+            isLightOn = true;
         }
     }
-
 }
