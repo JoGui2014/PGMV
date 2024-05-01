@@ -20,16 +20,15 @@ public class XMLReader : MonoBehaviour{
     private bool waitForInput = true;
     [SerializeField] GameObject gameBoard;
 
-    void Start(){
-        StartCoroutine(ReadXML());
+    public void StartReadingXML(string xmlFilePath){
+        StartCoroutine(ReadXML(xmlFilePath));
     }
 
-    IEnumerator ReadXML(){
+    IEnumerator ReadXML(string xmlFilePath){
+        
         // Load the XML file
-        TextAsset xmlFile = Resources.Load<TextAsset>("game__horizontal-island__war-2");
         XmlDocument xmlDoc = new XmlDocument();
-
-        xmlDoc.LoadXml(xmlFile.text);
+        xmlDoc.Load(xmlFilePath);
 
         // Extract width and height of the gaming board
         XmlNode boardNode = xmlDoc.SelectSingleNode("//board");

@@ -2,62 +2,66 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 
-
 public class FileExplorer : MonoBehaviour
 {
-    public Button yourButton; // Reference to your button in the scene
+    public Button button; // Reference to your button in the scene
     public string xmlFilePath; // Path to store the selected XML file
     private XMLReader xmlReader; // Reference to your XML reader script
     public GameObject mainCamera;
     public GameObject secondaryCamera;
-    public bool switchCam;
 
     void Start()
     {
-        //Calls the TaskOnClick/TaskWithParameters/ButtonClicked method when you click the Button
-        xmlReader = GameObject.FindWithTag("board").GetComponent<XMLReader>();
-        yourButton.onClick.AddListener(SwitchToGameCamera);
+        xmlReader = GetComponent<XMLReader>();
+        button.onClick.AddListener(OnClick);
         mainCamera.SetActive(true);
         secondaryCamera.SetActive(false);
     }
 
-    
-    void OpenExplorer()
+    void OnClick()
     {
-        // Open file explorer
-        string path = EditorUtility.OpenFilePanel("Open XML File", "", "xml");
-
-        // Check if a file was selected
-        if (!string.IsNullOrEmpty(path))
+        // If xmlFilePath is null, allow selecting XML file
+        
+        if (xmlFilePath == "")
+        {          
+            OpenExplorer();
+        } else
         {
-            // Store the path
-            xmlFilePath = path;
-
-            // Call the XML reader function
-            
-
-            // Switch camera to game camera
+            // If xmlFilePath is not null, switch cameras
             SwitchToGameCamera();
         }
     }
-    
+
+    void OpenExplorer()
+    {
+        // Open file explorer
+        string path = UnityEditor.EditorUtility.OpenFilePanel("Open XML File", "", "xml");
+
+        // Check if a file was selected
+        if (!string.IsNullOrEmpty(path) && IsXmlFile(path))
+        {
+            // Store the path
+            xmlFilePath = path;
+            xmlReader.StartReadingXML(xmlFilePath);
+            SwitchToGameCamera(); // Switch camera after XML file is selected
+        }
+        else {
+            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido não é um arquivo XML válido.", "OK");
+            // Abre um painel de diálogo para escolher outro arquivo
+            //xmlFilePath = EditorUtility.OpenFilePanel("Selecionar arquivo XML", "", "xml");
+        }
+        
+    }
+
+    bool IsXmlFile(string filePath)
+    {
+        // Verifica a extensão do arquivo para determinar se é XML
+        return filePath.ToLower().EndsWith(".xml");
+    }
 
     void SwitchToGameCamera()
     {
-      if (Input.GetKeyDown(KeyCode.C))
-        {
-            if (switchCam)
-            {
-                secondaryCamera.SetActive(true);
-                mainCamera.SetActive(false);
-                switchCam = false;
-            }
-            else
-            {
-                secondaryCamera.SetActive(false);
-                mainCamera.SetActive(true);
-                switchCam = true;
-            }
-        }
+        secondaryCamera.SetActive(true);
+        mainCamera.SetActive(false);
     }
 }
