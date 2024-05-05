@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Xml;
 using System;
 using System.Collections;
+using UnityEngine.UI;
+using UnityEditor;
 
 public class XMLReader : MonoBehaviour{
     public GameObject catapult;
@@ -19,18 +21,32 @@ public class XMLReader : MonoBehaviour{
 
     private bool waitForInput = true;
     [SerializeField] GameObject gameBoard;
+    private XmlDocument xmlDoc = new XmlDocument();
+    private XmlNode currTurn;
+
+    public Button buttonPause;
+    public Button buttonFoward;
+    public Button buttonBack;
+
+    private bool isRunning = false;
+    private bool lastTurn = false;
 
     public void StartReadingXML(string xmlFilePath){
-        StartCoroutine(ReadXML(xmlFilePath));
+        ReadXML(xmlFilePath);
+        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
+        currTurn = turnNodes.FirstChild;
+        play(currTurn);
     }
 
-    IEnumerator ReadXML(string xmlFilePath){
-        
-        // Load the XML file
-        XmlDocument xmlDoc = new XmlDocument();
+    void Start(){
+        buttonPause.onClick.AddListener(OnClickPause);
+        buttonFoward.onClick.AddListener(OnClickForward);
+        buttonBack.onClick.AddListener(OnClickBack);
+    }
+
+    void ReadXML(string xmlFilePath){
         xmlDoc.Load(xmlFilePath);
 
-        // Extract width and height of the gaming board
         XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
         if (boardNode != null){
             width = int.Parse(boardNode.Attributes["width"].Value);
@@ -38,66 +54,92 @@ public class XMLReader : MonoBehaviour{
             XmlNodeList fields = boardNode.ChildNodes;
             buildBoard(fields, width, height);
         }
-
-        // Extract and instantiate GameObjects based on XML data
-        // Wait until P key is pressed
-        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.P));
-        XmlNodeList turnNodes = xmlDoc.SelectNodes("//turn");
-        summonPieces(turnNodes);
     }
 
-    void summonPieces(XmlNodeList turnNodes){
-        foreach (XmlNode turnNode in turnNodes){
-            XmlNodeList unitNodes = turnNode.SelectNodes("./unit");
-            foreach (XmlNode unitNode in unitNodes){
-                string type = unitNode.Attributes["type"].Value;
-                float x = float.Parse(unitNode.Attributes["x"].Value);
-                float y = float.Parse(unitNode.Attributes["y"].Value);
-
-                string action = unitNode.Attributes["action"].Value;
-
-                GameObject prefab = null;
-                
-                float depth = 0f;
-
-                Vector3 scale = new Vector3(0.0001f, 0.0001f, 0.0001f);
-
-                if (action == "spawn"){
-                    switch (type){
-                        case "soldier":
-                            prefab = soldier;
-                            break;
-                        case "archer":
-                            prefab = archer;
-                            break;
-                        case "mage":
-                            prefab = mage;
-                            break;
-                        case "catapult":
-                            prefab = catapult;
-                            scale = new Vector3(0.00005f, 0.00005f, 0.00005f);
-                            depth = -0.00015f;
-                            break;
-                        default:
-                            Debug.LogWarning("Unknown unit type: " + type);
-                            break;
-                    }
-                }
-                if (prefab != null){
-                    Transform terrain = gameBoard.transform.Find($"{x},{y}");
-                    Vector3 position = terrain.localPosition;
-                    GameObject instance = Instantiate(prefab, gameBoard.transform);
-                    //METER ALEATORIDADE NA POSIÇAO               
-                    instance.transform.localPosition = new Vector3(position.x, position.y, position.z + depth);
-                    Quaternion targetRotation = Quaternion.Euler(0, 0, 0);
-                    instance.transform.rotation = targetRotation;
-                    instance.transform.localScale = scale;
-                    instance.name = unitNode.Attributes["id"].Value;
-                }
+    void play(XmlNode turn){
+        XmlNodeList unitNodes = turn.SelectNodes("./unit");
+        foreach (XmlNode unitNode in unitNodes){
+            string action = unitNode.Attributes["action"].Value;
+            switch (action){
+                case "spawn":
+                    summonPieces(unitNode);
+                    break;
+                case "move_to":
+                    move(unitNode);
+                    break;
+                case "attack":
+                    attack(unitNode);
+                    //  só animação de atacar e remoção das personagens adversárias que se encontram na casa atacada
+                    break;
+                case "hold":
+                    print("hold");
+                    break;
+                default:        
+                    Debug.LogWarning("Unknown action: " + action);
+                    break;
             }
         }
     }
 
+    void move(XmlNode unit){
+        Debug.LogWarning("Begin Move!");
+        string id = unit.Attributes["id"].Value;
+        GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
+            
+            float x = float.Parse(unit.Attributes["x"].Value);
+            float y = float.Parse(unit.Attributes["y"].Value);
+            Transform terrain = gameBoard.transform.Find($"{x},{y}");
+            Vector3 move_to_position = terrain.position;
+            CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+            cim.SetTarget(new Vector3(-9.19f, 7.30f, 24.42f));
+    }
+
+    void attack(XmlNode unit){
+        string id = unit.Attributes["id"].Value;
+        GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
+        float x = float.Parse(unit.Attributes["x"].Value);
+        float y = float.Parse(unit.Attributes["y"].Value);
+        print($"{id} atacou");
+    }
+
+    void summonPieces(XmlNode unit){
+        string type = unit.Attributes["type"].Value;
+        float x = float.Parse(unit.Attributes["x"].Value);
+        float y = float.Parse(unit.Attributes["y"].Value);
+        GameObject prefab = null;
+        float depth = 0f;
+        Vector3 scale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+        switch (type){
+            case "soldier":
+                prefab = soldier;
+                break;
+            case "archer":
+                prefab = archer;
+                break;
+            case "mage":
+                prefab = mage;
+                break;
+            case "catapult":
+                prefab = catapult;
+                scale = new Vector3(0.00005f, 0.00005f, 0.00005f);
+                depth = -0.00015f;
+                break;
+            default:
+                Debug.LogWarning("Unknown unit type: " + type);
+                break;
+        }
+        if (prefab != null){
+            Transform terrain = gameBoard.transform.Find($"{x},{y}");
+            Vector3 position = terrain.localPosition;
+            GameObject instance = Instantiate(prefab, gameBoard.transform);
+            //METER ALEATORIDADE NA POSIÇAO               
+            instance.transform.localPosition = new Vector3(position.x, position.y, position.z + depth);
+            Quaternion targetRotation = Quaternion.Euler(0, 0, 0);
+            instance.transform.rotation = targetRotation;
+            instance.transform.localScale = scale;
+            instance.name = unit.Attributes["id"].Value;
+        }
+    }
 
     void buildBoard(XmlNodeList fields, int width, int heigth){
         int i = 0;
@@ -154,8 +196,10 @@ public class XMLReader : MonoBehaviour{
                 float x = prefabHeight * ((height-1f)/2);
                 float y = prefabWidth * ((width-1f)/2);
 
+                Quaternion rotation = gameBoard.transform.rotation;
+                float rotationY = rotation.eulerAngles.y;
 
-                Quaternion targetRotation = Quaternion.Euler(0, 90, 0);
+                Quaternion targetRotation = Quaternion.Euler(0, rotationY + 90, 0);
                 instance.transform.rotation = targetRotation;
 
                 float newX = -x + (j * prefabHeight);
@@ -180,6 +224,55 @@ public class XMLReader : MonoBehaviour{
                     j++;    
                 }
             }
+        }
+    }
+
+    private IEnumerator playLoop(){
+        isRunning = true;
+        lastTurn = false;
+        while(!lastTurn && isRunning){
+            if(currTurn.NextSibling != null){
+                currTurn = currTurn.NextSibling;
+                play(currTurn);
+            } else {
+                lastTurn = true;
+            }
+            yield return new WaitForSeconds(10);
+        }
+
+    }
+
+    private void OnClickPause(){
+        print("clicou");
+        if(!isRunning){
+            StartCoroutine(playLoop());
+        }
+    }
+
+    private void OnClickForward(){
+        print("clicou");
+        isRunning = false;
+        if(currTurn.NextSibling != null){
+            lastTurn = false;
+            currTurn = currTurn.NextSibling;
+            play(currTurn);
+        } else{
+            lastTurn=true;
+        }
+    }
+
+    private void OnClickBack(){
+        print("clicou");
+        isRunning = false;
+        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
+        if(currTurn.PreviousSibling == turnNodes.FirstChild || currTurn.PreviousSibling == null){
+            print("é igual");
+            currTurn = turnNodes.FirstChild;
+            lastTurn=true;
+        }else{
+            lastTurn = false;
+            currTurn = currTurn.PreviousSibling;
+            play(currTurn);
         }
     }
 }
