@@ -30,15 +30,14 @@ public class XMLReader : MonoBehaviour{
 
     private bool isRunning = false;
     private bool lastTurn = false;
+    private bool hasBoard = false;
 
     public void StartReadingXML(string xmlFilePath){
         ReadXML(xmlFilePath);       
         play(currTurn);
-        
     }
 
     void Start(){
-        print(gameBoard.name);  
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
         buttonBack.onClick.AddListener(OnClickBack);
@@ -48,7 +47,6 @@ public class XMLReader : MonoBehaviour{
         xmlDoc.Load(xmlFilePath);
         XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
         currTurn = turnNodes.FirstChild;
-        print(currTurn);
         XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
         if (boardNode != null){
             width = int.Parse(boardNode.Attributes["width"].Value);
@@ -56,6 +54,7 @@ public class XMLReader : MonoBehaviour{
             XmlNodeList fields = boardNode.ChildNodes;
             buildBoard(fields, width, height);
         }
+        hasBoard = true;
     }
 
     void play(XmlNode turn){
@@ -235,10 +234,6 @@ public class XMLReader : MonoBehaviour{
         isRunning = true;
         lastTurn = false;
     
-
-        print(gameBoard.name);
-        print(currTurn);
-    
         while(!lastTurn && isRunning){
             if(currTurn.NextSibling != null){
                 currTurn = currTurn.NextSibling;
@@ -251,37 +246,44 @@ public class XMLReader : MonoBehaviour{
     }
 
     private void OnClickPause(){
-         
         print("clicou");
-        if(!isRunning){
-            StartCoroutine(playLoop());
+        if(hasBoard){
+            if(!isRunning){
+                StartCoroutine(playLoop());
+            } else {
+                isRunning = false;
+            }
         }
     }
 
     private void OnClickForward(){
         print("clicou");
-        isRunning = false;
-        if(currTurn.NextSibling != null){
-            lastTurn = false;
-            currTurn = currTurn.NextSibling;
-            play(currTurn);
-        } else{
-            lastTurn=true;
+        if(hasBoard){
+            isRunning = false;
+            if(currTurn.NextSibling != null){
+                lastTurn = false;
+                currTurn = currTurn.NextSibling;
+                play(currTurn);
+            } else{
+                lastTurn=true;
+            }
         }
     }
 
     private void OnClickBack(){
         print("clicou");
-        isRunning = false;
-        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-        if(currTurn.PreviousSibling == turnNodes.FirstChild || currTurn.PreviousSibling == null){
-            print("é igual");
-            currTurn = turnNodes.FirstChild;
-            lastTurn=true;
-        }else{
-            lastTurn = false;
-            currTurn = currTurn.PreviousSibling;
-            play(currTurn);
+        if(hasBoard){
+            isRunning = false;
+            XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
+            if(currTurn.PreviousSibling == turnNodes.FirstChild || currTurn.PreviousSibling == null){
+                print("é igual");
+                currTurn = turnNodes.FirstChild;
+                lastTurn=true;
+            }else{
+                lastTurn = false;
+                currTurn = currTurn.PreviousSibling;
+                play(currTurn);
+            }
         }
     }
 }
