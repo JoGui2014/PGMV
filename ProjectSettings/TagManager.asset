@@ -6,6 +6,7 @@ TagManager:
   tags:
   - SecondaryCamera
   - board
+  - SecondBoard
   layers:
   - Default
   - TransparentFX

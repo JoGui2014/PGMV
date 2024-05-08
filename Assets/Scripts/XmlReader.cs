@@ -24,21 +24,21 @@ public class XMLReader : MonoBehaviour{
     private XmlDocument xmlDoc = new XmlDocument();
     private XmlNode currTurn;
 
-    public Button buttonPause;
-    public Button buttonFoward;
-    public Button buttonBack;
+    [SerializeField] Button buttonPause;
+    [SerializeField] Button buttonFoward;
+    [SerializeField] Button buttonBack;
 
     private bool isRunning = false;
     private bool lastTurn = false;
 
     public void StartReadingXML(string xmlFilePath){
-        ReadXML(xmlFilePath);
-        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-        currTurn = turnNodes.FirstChild;
+        ReadXML(xmlFilePath);       
         play(currTurn);
+        
     }
 
     void Start(){
+        print(gameBoard.name);  
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
         buttonBack.onClick.AddListener(OnClickBack);
@@ -46,7 +46,9 @@ public class XMLReader : MonoBehaviour{
 
     void ReadXML(string xmlFilePath){
         xmlDoc.Load(xmlFilePath);
-
+        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
+        currTurn = turnNodes.FirstChild;
+        print(currTurn);
         XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
         if (boardNode != null){
             width = int.Parse(boardNode.Attributes["width"].Value);
@@ -57,6 +59,7 @@ public class XMLReader : MonoBehaviour{
     }
 
     void play(XmlNode turn){
+        
         XmlNodeList unitNodes = turn.SelectNodes("./unit");
         foreach (XmlNode unitNode in unitNodes){
             string action = unitNode.Attributes["action"].Value;
@@ -84,6 +87,7 @@ public class XMLReader : MonoBehaviour{
     void move(XmlNode unit){
         Debug.LogWarning("Begin Move!");
         string id = unit.Attributes["id"].Value;
+        
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
             
             float x = float.Parse(unit.Attributes["x"].Value);
@@ -230,6 +234,11 @@ public class XMLReader : MonoBehaviour{
     private IEnumerator playLoop(){
         isRunning = true;
         lastTurn = false;
+    
+
+        print(gameBoard.name);
+        print(currTurn);
+    
         while(!lastTurn && isRunning){
             if(currTurn.NextSibling != null){
                 currTurn = currTurn.NextSibling;
@@ -239,10 +248,10 @@ public class XMLReader : MonoBehaviour{
             }
             yield return new WaitForSeconds(10);
         }
-
     }
 
     private void OnClickPause(){
+         
         print("clicou");
         if(!isRunning){
             StartCoroutine(playLoop());
