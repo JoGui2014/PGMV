@@ -3,10 +3,9 @@ using System.Xml;
 using System;
 using System.Collections;
 using UnityEngine.UI;
-using UnityEditor;
 using TMPro;
 
-public class XMLReader : MonoBehaviour{
+public class XMLReader : MonoBehaviour {
     public GameObject catapult;
     public GameObject soldier;
     public GameObject archer;
@@ -36,44 +35,52 @@ public class XMLReader : MonoBehaviour{
     private bool hasBoard = false;
 
     private int numberTurns = 0;
+    private string playerName;
+    private float boardDepth;
 
-    public void StartReadingXML(string xmlFilePath){
+    public void StartReadingXML(string xmlFilePath) {
         ReadXML(xmlFilePath);
-        numberTurns += 1;       
-        play(currTurn);
+        numberTurns = 0;
     }
 
-    void Start(){
+    void Start() {
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
         buttonBack.onClick.AddListener(OnClickBack);
     }
 
-    void Update(){
+    void Update() {
         turns.text = $"Nº Turns: {numberTurns}";
     }
 
-    void ReadXML(string xmlFilePath){
-        xmlDoc.Load(xmlFilePath);
-        XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-        currTurn = turnNodes.FirstChild;
-        XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
-        if (boardNode != null){
-            width = int.Parse(boardNode.Attributes["width"].Value);
-            height = int.Parse(boardNode.Attributes["height"].Value);
-            XmlNodeList fields = boardNode.ChildNodes;
-            buildBoard(fields, width, height);
+    void ReadXML(string xmlFilePath) {
+        try {
+            xmlDoc.Load(xmlFilePath);
+            XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
+            currTurn = turnNodes?.FirstChild;
+
+            XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
+            if (boardNode != null) {
+                width = int.Parse(boardNode.Attributes["width"].Value);
+                height = int.Parse(boardNode.Attributes["height"].Value);
+                XmlNodeList fields = boardNode.ChildNodes;
+                buildBoard(fields, width, height);
+            }
+            hasBoard = true;
+        } catch (Exception ex) {
+            Debug.LogError($"Error reading XML file: {ex.Message}");
         }
-        hasBoard = true;
     }
 
-    void play(XmlNode turn){
-        XmlNodeList unitNodes = turn.SelectNodes("./unit");
-        foreach (XmlNode unitNode in unitNodes){
+    IEnumerator ProcessActions(XmlNodeList unitNodes) {
+        foreach (XmlNode unitNode in unitNodes) {
             string action = unitNode.Attributes["action"].Value;
-            string playerName = unitNode.Attributes["role"].Value;
-            player.text = playerName;
-            switch (action){
+            playerName = unitNode.Attributes["role"].Value;
+
+            // Update player name UI
+            player.text = $"Playing: {playerName}";
+
+            switch (action) {
                 case "spawn":
                     summonPieces(unitNode);
                     break;
@@ -82,41 +89,45 @@ public class XMLReader : MonoBehaviour{
                     break;
                 case "attack":
                     attack(unitNode);
-                    //  só animação de atacar e remoção das personagens adversárias que se encontram na casa atacada
                     break;
                 case "hold":
-                    print("hold");
+                    Debug.Log("hold");
                     break;
-                default:        
+                default:
                     Debug.LogWarning("Unknown action: " + action);
                     break;
             }
+
+            // Wait for a short period before processing the next action
+            yield return new WaitForSeconds(1); // Adjust the delay as needed
         }
     }
 
-    void move(XmlNode unit){
+    void move(XmlNode unit) {
         Debug.LogWarning("Begin Move!");
         string id = unit.Attributes["id"].Value;
-        
+
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
-            
+
+        if (piece != null) {
             float x = float.Parse(unit.Attributes["x"].Value);
             float y = float.Parse(unit.Attributes["y"].Value);
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             Vector3 move_to_position = terrain.position;
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
-            cim.SetTarget(new Vector3(-9.19f, 7.30f, 24.42f));
+            cim.SetTarget(move_to_position);  // Use the calculated move_to_position
+        }
     }
 
-    void attack(XmlNode unit){
+    void attack(XmlNode unit) {
         string id = unit.Attributes["id"].Value;
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
-        print($"{id} atacou");
+        Debug.Log($"{id} attacked position ({x}, {y})");
     }
 
-    void summonPieces(XmlNode unit){
+   void summonPieces(XmlNode unit){
         string type = unit.Attributes["type"].Value;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
@@ -155,112 +166,91 @@ public class XMLReader : MonoBehaviour{
         }
     }
 
-    void buildBoard(XmlNodeList fields, int width, int heigth){
-        int i = 0;
-        int j = 0;
-        // Extract and instantiate GameObjects based on XML data
-        foreach (XmlNode field in fields){
-            string fieldType = field.Name;
+    void buildBoard(XmlNodeList fields, int width, int height) {
+        int i = 0, j = 0;
+        MeshFilter meshFilter = gameBoard.GetComponent<MeshFilter>();
+        if (meshFilter == null) return;
 
-            GameObject prefab = null;
+        float boardWidth = meshFilter.sharedMesh.bounds.size.x;
+        float boardHeight = meshFilter.sharedMesh.bounds.size.y;
+        boardDepth = meshFilter.sharedMesh.bounds.size.z;
 
-            switch (fieldType){
-                case "village":
-                    prefab = village;
-                    break;
-                case "forest":
-                    prefab = forest;
-                    break;
-                case "sea":
-                    prefab = sea;
-                    break;
-                case "plain":
-                    prefab = plain;
-                    break;
-                case "mountain":
-                    prefab = mountain;
-                    break;
-                case "desert":
-                    prefab = desert;
-                    break;
-                default:
-                    Debug.LogWarning("Unknown unit type: " + fieldType);
-                    break;
-            }
-            if (prefab != null){
-                // Instantiate the prefab with the game board as its parent
+        float prefabWidth = boardWidth / width;
+        float prefabHeight = boardHeight / height;
+        float xOffset = prefabHeight * ((height - 1f) / 2);
+        float yOffset = prefabWidth * ((width - 1f) / 2);
+
+        foreach (XmlNode field in fields) {
+            GameObject prefab = GetPrefabByFieldType(field.Name);
+            if (prefab != null) {
                 GameObject instance = Instantiate(prefab, gameBoard.transform);
-
-                // Get the height of the game board
-                MeshFilter meshFilter = gameBoard.GetComponent<MeshFilter>();
-                float boardDepth = 0f;
-                float boardWidth = 0f;
-                float boardHeight = 0f;
-
-                if (meshFilter != null){
-    
-                    boardDepth = meshFilter.sharedMesh.bounds.size.z;
-                    boardWidth = meshFilter.sharedMesh.bounds.size.x;
-                    boardHeight = meshFilter.sharedMesh.bounds.size.y;
-    
-                }
-
-                float prefabWidth = boardWidth/width;
-                float prefabHeight = boardHeight/height;
-                float x = prefabHeight * ((height-1f)/2);
-                float y = prefabWidth * ((width-1f)/2);
-
-                Quaternion rotation = gameBoard.transform.rotation;
-                float rotationY = rotation.eulerAngles.y;
-
-                Quaternion targetRotation = Quaternion.Euler(0, rotationY + 90, 0);
-                instance.transform.rotation = targetRotation;
-
-                float newX = -x + (j * prefabHeight);
-                float newY = -y + (i * prefabWidth);
-
-
-                instance.transform.localPosition = new Vector3(newX, newY, -boardDepth/2);
-
-                // Set the scale of the instance
-                MeshFilter meshFilterPrefab = prefab.GetComponent<MeshFilter>();
-
-                float prefabScaleX = prefabWidth / meshFilterPrefab.sharedMesh.bounds.size.z;
-                float prefabScaleZ = prefabHeight / meshFilterPrefab.sharedMesh.bounds.size.x;
-
-                instance.transform.localScale = new Vector3(prefabScaleX, 1f, prefabScaleZ);
-                instance.name = $"{i+1},{j+1}";
+                float terrainX = -xOffset + (j * prefabHeight);
+                float terrainY = -yOffset + (i * prefabWidth);
+                instance.transform.localPosition = new Vector3(terrainX, terrainY, -boardDepth / 2);
+                instance.transform.localScale = GetScaledPrefab(prefab, prefabWidth, prefabHeight);
+                instance.transform.rotation = Quaternion.Euler(0, gameBoard.transform.rotation.eulerAngles.y + 90, 0);
+                instance.name = $"{i + 1},{j + 1}";
 
                 i++;
-
-                if(i == width) {
+                if (i == width) {
                     i = 0;
-                    j++;    
+                    j++;
                 }
             }
         }
     }
 
-    private IEnumerator playLoop(){
+    GameObject GetPrefabByFieldType(string fieldType) {
+        switch (fieldType) {
+            case "village":
+                return village;
+            case "forest":
+                return forest;
+            case "sea":
+                return sea;
+            case "plain":
+                return plain;
+            case "mountain":
+                return mountain;
+            case "desert":
+                return desert;
+            default:
+                Debug.LogWarning("Unknown field type: " + fieldType);
+                return null;
+        }
+    }
+
+    Vector3 GetScaledPrefab(GameObject prefab, float prefabWidth, float prefabHeight) {
+        MeshFilter meshFilterPrefab = prefab.GetComponent<MeshFilter>();
+        float prefabScaleX = prefabWidth / meshFilterPrefab.sharedMesh.bounds.size.z;
+        float prefabScaleZ = prefabHeight / meshFilterPrefab.sharedMesh.bounds.size.x;
+        return new Vector3(prefabScaleX, 1f, prefabScaleZ);
+    }
+
+    private IEnumerator playLoop() {
         isRunning = true;
         lastTurn = false;
-    
-        while(!lastTurn && isRunning){
-            if(currTurn.NextSibling != null){
-                currTurn = currTurn.NextSibling;
-                numberTurns += 1;
-                play(currTurn);
+
+        while (!lastTurn && isRunning) {
+            if (currTurn != null) {
+                yield return StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit")));
+                if (currTurn.NextSibling != null) {
+                    currTurn = currTurn.NextSibling;
+                    numberTurns += 1;
+                } else {
+                    lastTurn = true;
+                }
             } else {
                 lastTurn = true;
             }
-            yield return new WaitForSeconds(10);
+            yield return new WaitForSeconds(10); // Adjust if needed
         }
     }
 
-    private void OnClickPause(){
-        print("clicou");
-        if(hasBoard){
-            if(!isRunning){
+    private void OnClickPause() {
+        Debug.Log("Pause clicked");
+        if (hasBoard) {
+            if (!isRunning) {
                 StartCoroutine(playLoop());
             } else {
                 isRunning = false;
@@ -268,35 +258,31 @@ public class XMLReader : MonoBehaviour{
         }
     }
 
-    private void OnClickForward(){
-        print("clicou");
-        if(hasBoard){
+    private void OnClickForward() {
+        Debug.Log("Forward clicked");
+        if (hasBoard) {
             isRunning = false;
-            if(currTurn.NextSibling != null){
-                lastTurn = false;
-                currTurn = currTurn.NextSibling;
-                numberTurns += 1;
-                play(currTurn);
-            } else{
-                lastTurn=true;
+            if (currTurn != null) {
+                StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit")));
+                if (currTurn.NextSibling != null) {
+                    currTurn = currTurn.NextSibling;
+                    numberTurns += 1;
+                } else {
+                    lastTurn = true;
+                }
             }
         }
     }
 
-    private void OnClickBack(){
-        print("clicou");
-        if(hasBoard){
+    private void OnClickBack() {
+        Debug.Log("Back clicked");
+        if (hasBoard) {
             isRunning = false;
-            XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-            if(currTurn.PreviousSibling == turnNodes.FirstChild || currTurn.PreviousSibling == null){
-                print("é igual");
-                currTurn = turnNodes.FirstChild;
-                lastTurn=true;
-            }else{
-                lastTurn = false;
-                currTurn = currTurn.PreviousSibling;
-                numberTurns -= 1;
-                play(currTurn);
+            XmlNode previousTurn = currTurn?.PreviousSibling;
+            if (previousTurn != null) {
+                currTurn = previousTurn;
+                numberTurns = Math.Max(0, numberTurns - 1);
+                StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit")));
             }
         }
     }
