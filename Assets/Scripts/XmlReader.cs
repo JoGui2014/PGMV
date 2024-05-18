@@ -99,7 +99,7 @@ public class XMLReader : MonoBehaviour {
             }
 
             // Wait for a short period before processing the next action
-            yield return new WaitForSeconds(1); // Adjust the delay as needed
+            yield return new WaitForSeconds(2); // Adjust the delay as needed
         }
     }
 
@@ -127,43 +127,73 @@ public class XMLReader : MonoBehaviour {
         Debug.Log($"{id} attacked position ({x}, {y})");
     }
 
-   void summonPieces(XmlNode unit){
+   void summonPieces(XmlNode unit) {
         string type = unit.Attributes["type"].Value;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
-        GameObject prefab = null;
-        float depth = 0f;
-        Vector3 scale = new Vector3(0.0001f, 0.0001f, 0.0001f);
-        switch (type){
+        GameObject prefab = GetPrefabByType(type);
+
+        if (prefab != null) {
+            Transform terrain = gameBoard.transform.Find($"{x},{y}");
+            if (terrain != null) {
+                Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+                Vector3 terrainPosition = terrain.position;
+
+                // Calculate the size of the piece's bounding box
+                GameObject tempInstance = Instantiate(prefab);
+                Renderer pieceRenderer = tempInstance.GetComponentInChildren<Renderer>();
+                if (pieceRenderer == null) {
+                    Debug.LogWarning($"No Renderer found for the prefab type '{type}'.");
+                    Destroy(tempInstance);
+                    return;
+                }
+                Vector3 pieceSize = pieceRenderer.bounds.size;
+                Destroy(tempInstance);
+
+                // Generate random positions within the terrain bounds, adjusted for the piece size
+                float halfPieceWidth = pieceSize.x / 2;
+                float halfPieceDepth = pieceSize.y / 2;
+                float randomX = UnityEngine.Random.Range(terrainPosition.x - terrainSize.x / 2 + halfPieceWidth, terrainPosition.x + terrainSize.x / 2 - halfPieceWidth);
+                float randomY = terrainPosition.y + GetDepthByType(type);
+                float randomZ = UnityEngine.Random.Range(terrainPosition.z - terrainSize.z / 2 + halfPieceDepth, terrainPosition.z + terrainSize.z / 2 - halfPieceDepth);
+
+                Vector3 randomPosition = new Vector3(randomX, randomY, randomZ);
+
+                GameObject instance = Instantiate(prefab, gameBoard.transform);
+                instance.transform.position = randomPosition;
+                instance.transform.rotation = Quaternion.Euler(0, 0, 0);
+                instance.transform.localScale = GetScaleByType(type);
+                instance.name = unit.Attributes["id"].Value;
+            } else {
+                Debug.LogWarning($"Terrain at position ({x},{y}) not found.");
+            }
+        } else {
+            Debug.LogWarning($"Prefab for type '{type}' not found.");
+        }
+    }
+
+    GameObject GetPrefabByType(string type) {
+        switch (type) {
             case "soldier":
-                prefab = soldier;
-                break;
+                return soldier;
             case "archer":
-                prefab = archer;
-                break;
+                return archer;
             case "mage":
-                prefab = mage;
-                break;
+                return mage;
             case "catapult":
-                prefab = catapult;
-                scale = new Vector3(0.00005f, 0.00005f, 0.00005f);
-                depth = -0.00015f;
-                break;
+                return catapult;
             default:
                 Debug.LogWarning("Unknown unit type: " + type);
-                break;
+                return null;
         }
-        if (prefab != null){
-            Transform terrain = gameBoard.transform.Find($"{x},{y}");
-            Vector3 position = terrain.localPosition;
-            GameObject instance = Instantiate(prefab, gameBoard.transform);
-            //METER ALEATORIDADE NA POSIÇAO               
-            instance.transform.localPosition = new Vector3(position.x, position.y, position.z + depth);
-            Quaternion targetRotation = Quaternion.Euler(0, 0, 0);
-            instance.transform.rotation = targetRotation;
-            instance.transform.localScale = scale;
-            instance.name = unit.Attributes["id"].Value;
-        }
+    }
+
+    float GetDepthByType(string type) {
+        return type == "catapult" ? 0.15f : 0f;
+    }
+
+    Vector3 GetScaleByType(string type) {
+        return type == "catapult" ? new Vector3(0.00005f, 0.00005f, 0.00005f) : new Vector3(0.0001f, 0.0001f, 0.0001f);
     }
 
     void buildBoard(XmlNodeList fields, int width, int height) {
