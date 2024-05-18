@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using UnityEngine.UI;
 using UnityEditor;
+using TMPro;
 
 public class XMLReader : MonoBehaviour{
     public GameObject catapult;
@@ -18,6 +19,8 @@ public class XMLReader : MonoBehaviour{
     public GameObject desert;
     public int width;
     public int height;
+    public TMP_Text player;
+    public TMP_Text turns;
 
     private bool waitForInput = true;
     [SerializeField] GameObject gameBoard;
@@ -32,8 +35,11 @@ public class XMLReader : MonoBehaviour{
     private bool lastTurn = false;
     private bool hasBoard = false;
 
+    private int numberTurns = 0;
+
     public void StartReadingXML(string xmlFilePath){
-        ReadXML(xmlFilePath);       
+        ReadXML(xmlFilePath);
+        numberTurns += 1;       
         play(currTurn);
     }
 
@@ -41,6 +47,10 @@ public class XMLReader : MonoBehaviour{
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
         buttonBack.onClick.AddListener(OnClickBack);
+    }
+
+    void Update(){
+        turns.text = $"Nº Turns: {numberTurns}";
     }
 
     void ReadXML(string xmlFilePath){
@@ -58,10 +68,11 @@ public class XMLReader : MonoBehaviour{
     }
 
     void play(XmlNode turn){
-        
         XmlNodeList unitNodes = turn.SelectNodes("./unit");
         foreach (XmlNode unitNode in unitNodes){
             string action = unitNode.Attributes["action"].Value;
+            string playerName = unitNode.Attributes["role"].Value;
+            player.text = playerName;
             switch (action){
                 case "spawn":
                     summonPieces(unitNode);
@@ -237,6 +248,7 @@ public class XMLReader : MonoBehaviour{
         while(!lastTurn && isRunning){
             if(currTurn.NextSibling != null){
                 currTurn = currTurn.NextSibling;
+                numberTurns += 1;
                 play(currTurn);
             } else {
                 lastTurn = true;
@@ -263,6 +275,7 @@ public class XMLReader : MonoBehaviour{
             if(currTurn.NextSibling != null){
                 lastTurn = false;
                 currTurn = currTurn.NextSibling;
+                numberTurns += 1;
                 play(currTurn);
             } else{
                 lastTurn=true;
@@ -282,6 +295,7 @@ public class XMLReader : MonoBehaviour{
             }else{
                 lastTurn = false;
                 currTurn = currTurn.PreviousSibling;
+                numberTurns -= 1;
                 play(currTurn);
             }
         }
