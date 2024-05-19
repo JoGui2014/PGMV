@@ -1056,6 +1056,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   character: {fileID: 328861547702999303}
+  ghost_character: {fileID: 8755931765077842792, guid: 554bc4a2e929f4a4ab6be7e349cf8c0f, type: 3}
 --- !u!114 &7504608628463162655
 MonoBehaviour:
   m_ObjectHideFlags: 0

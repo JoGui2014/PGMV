@@ -5,13 +5,22 @@ using UnityEngine;
 public class CharacterIdleMacro : MonoBehaviour
 {
     public GameObject character;
+    public GameObject ghost_character;
     private Vector3 target;
     private float speed = 0.8f;
-    private float opacity = 1.2f;
-    private bool spawn_ghost = false;
+    private float speed_rotate = 1.0f;
+    private float speed_die = 0.3f;
+    Vector3 dead_scale = new Vector3(0.00008f, 0.00008f, 0.00008f);
+    private float opacity = 0.1f;
     private bool trace_path = false;
     private bool killed = false;
     private bool rotated = false;
+    private float Dying = 0.0f;
+    private Vector3 curr_pos;
+    private Vector3 initial_scale;
+    private string team;
+    private bool can_walk = true;
+    private GameObject ghost;
 
     private List<GameObject> path = new List<GameObject>();
 
@@ -23,40 +32,46 @@ public class CharacterIdleMacro : MonoBehaviour
         target = new Vector3(Pos.x, Pos.y, Pos.z);
     }
 
+    public void SetTeam(string receivedTeam){
+        this.team = receivedTeam;
+    }
+
+    public void SetCatapult(){
+        can_walk = false;
+    }
+
+    public string getTeam(){
+        return team;
+    }
+
     public void Died(){
         killed = true;
     }
 
     void Start()
     {
+        curr_pos = character.transform.position;
+        initial_scale = character.transform.localScale;
     }
 
     // Update is called once per frame
     public void FixedUpdate()
     {
-
-        /*if (spawn_ghost){
-            spawnGhost();
-            spawn_ghost = false;
-        }*/
         if(trace_path){
             Show_Path();
         }else{
             HidePath();
         }
 
-        /*if(killed){
-           KillCharacter();
+        if(killed){
+            KillCharacter();
         }
-        */
+
         if (rotated){
             moveCharacter();
         }else{
             rotateCharacter();
         }
-
-
-
 
     }
 
@@ -66,12 +81,14 @@ public class CharacterIdleMacro : MonoBehaviour
 
 
     public void spawnGhost() {
-       /* GameObject auxcharacter = Instantiate(character, character.transform.position, character.transform.localRotation);
-        Material material = auxcharacter.GetComponent<Renderer>().material;
-        Color c = material.color;
-        c.a = opacity;
-        material.color = c; */
-        //Tem de aplicar opacidade na textura das personagens e nao no material
+      if (can_walk){
+        Vector3 scale = new Vector3(0.08f, 0.08f, 0.08f);
+        ghost = Instantiate(ghost_character);
+        ghost.transform.position = curr_pos;
+        ghost.transform.rotation = character.transform.rotation;
+        ghost.transform.localScale = scale;
+      }
+
     }
 
     void OnMouseOver(){
@@ -110,42 +127,53 @@ public class CharacterIdleMacro : MonoBehaviour
     }
 
     public void KillCharacter(){
-        //Diminuir a escala do boneco
-        //Aumentar a opacidade do boneco
+        Dying += speed_die * Time.deltaTime;
+        character.transform.localScale = Vector3.Lerp(initial_scale, dead_scale, Dying);
+        if( Dying >= 1.0f){
+            Destroy(character);
+        }
         //Meter fumo na posição
+        //Opacidade
         //Tocar um som
     }
 
     public void rotateCharacter(){
+      if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
-            spawn_ghost = true;
+             Vector3 relativePosition = target - character.transform.position;
+             if (relativePosition != new Vector3(0f,0f,0f)){
+                 Quaternion targetRotation = Quaternion.LookRotation(relativePosition);
 
-            Vector3 relativePosition = target - character.transform.position;
-            if (relativePosition != new Vector3(0f,0f,0f)){
-                Quaternion targetRotation = Quaternion.LookRotation(relativePosition);
+                 character.transform.rotation = Quaternion.Lerp(character.transform.rotation, targetRotation, speed_rotate * Time.deltaTime);
 
-                character.transform.rotation = Quaternion.Lerp(character.transform.rotation, targetRotation, speed * Time.deltaTime);
-
-                if (Quaternion.Angle(character.transform.rotation, targetRotation) < 1.0f){
+                 if (Quaternion.Angle(character.transform.rotation, targetRotation) < 1.0f){
 
                      rotated = true;
-                }
-            }
+                 }
+             }
+
         }
+      }
+
 
     }
 
 
 
     public void moveCharacter() {
+      if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
             create_Path_object();
             Vector3 direction = (target - character.transform.position).normalized;
             character.transform.position += direction * speed * Time.deltaTime;
             if(Vector3.Distance(target, character.transform.position) <= 0.1f){
                 target = new Vector3(0f,0f,0f);
+                curr_pos = character.transform.position;
+                rotated = false;
+                Destroy(ghost);
             }
         }
+      }
 
     }
 }

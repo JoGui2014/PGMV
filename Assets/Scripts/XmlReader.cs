@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class XMLReader : MonoBehaviour {
     public GameObject catapult;
@@ -35,6 +36,7 @@ public class XMLReader : MonoBehaviour {
     private bool hasBoard = false;
 
     private int numberTurns = 0;
+    private int numPieces;
     private string playerName;
     private float boardDepth;
 
@@ -104,6 +106,7 @@ public class XMLReader : MonoBehaviour {
     }
 
     void move(XmlNode unit) {
+        Debug.LogWarning("Cheguei AQUI!");
         Debug.LogWarning("Begin Move!");
         string id = unit.Attributes["id"].Value;
 
@@ -115,6 +118,7 @@ public class XMLReader : MonoBehaviour {
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             Vector3 move_to_position = terrain.position;
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+            cim.spawnGhost();
             cim.SetTarget(move_to_position);  // Use the calculated move_to_position
         }
     }
@@ -124,13 +128,52 @@ public class XMLReader : MonoBehaviour {
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
-        Debug.Log($"{id} attacked position ({x}, {y})");
+        string team = unit.Attributes["role"].Value;
+        Transform terrain = gameBoard.transform.Find($"{x},{y}");
+        Vector3 attacked_position = terrain.position;
+        List<string> charsToAttack = getEnemies(team, getCharactersInTerrain(attacked_position));
+        print($"{id} atacou");
+        foreach (string loopie in charsToAttack){
+            GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
+            CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
+            aux.Died();
+        }
+
     }
 
+    public List<string> getCharactersInTerrain(Vector3 terrainPos){
+        List<string> CharsInTerrain = new List<string>();
+        for (int i = 1; i <= numPieces; i++)
+        {
+            string id = i.ToString();
+            GameObject c = gameBoard.transform.Find($"{id}")?.gameObject;
+            if (c != null && Vector3.Distance(c.transform.position, terrainPos) <= 0.1f){
+                CharsInTerrain.Add(id);
+            }
+        }
+        return CharsInTerrain;
+    }
+
+    public List<string> getEnemies(string team, List<string> characters){
+        List<string> enemies = new List<string>();
+        foreach(string entity in characters){
+            GameObject character = gameBoard.transform.Find($"{entity}")?.gameObject;
+            CharacterIdleMacro aux = character.GetComponent<CharacterIdleMacro>();
+            string entityTeam = aux.getTeam();
+            if (entityTeam != team){
+                enemies.Add(entity);
+            }
+        }
+        return enemies;
+    }
+
+
    void summonPieces(XmlNode unit) {
+        numPieces++;
         string type = unit.Attributes["type"].Value;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
+        string team = unit.Attributes["role"].Value;
         GameObject prefab = GetPrefabByType(type);
 
         if (prefab != null) {
@@ -138,6 +181,7 @@ public class XMLReader : MonoBehaviour {
             if (terrain != null) {
                 Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
                 Vector3 terrainPosition = terrain.position;
+
 
                 // Calculate the size of the piece's bounding box
                 GameObject tempInstance = Instantiate(prefab);
@@ -160,6 +204,11 @@ public class XMLReader : MonoBehaviour {
                 Vector3 randomPosition = new Vector3(randomX, randomY, randomZ);
 
                 GameObject instance = Instantiate(prefab, gameBoard.transform);
+                CharacterIdleMacro character = instance.GetComponent<CharacterIdleMacro>();
+                character.SetTeam(team);
+                if (type == "catapult"){
+                    character.SetCatapult();
+                }
                 instance.transform.position = randomPosition;
                 instance.transform.rotation = Quaternion.Euler(0, 0, 0);
                 instance.transform.localScale = GetScaleByType(type);
@@ -193,7 +242,7 @@ public class XMLReader : MonoBehaviour {
     }
 
     Vector3 GetScaleByType(string type) {
-        return type == "catapult" ? new Vector3(0.00005f, 0.00005f, 0.00005f) : new Vector3(0.0001f, 0.0001f, 0.0001f);
+        return type == "catapult" ? new Vector3(0.00005f, 0.00005f, 0.00005f) : new Vector3(0.00015f, 0.00015f, 0.00015f);
     }
 
     void buildBoard(XmlNodeList fields, int width, int height) {

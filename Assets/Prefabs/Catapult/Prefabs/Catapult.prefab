@@ -870,6 +870,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8099851757618285668}
+  - component: {fileID: 5240237996167285865}
   m_Layer: 0
   m_Name: Catapult
   m_TagString: Untagged
@@ -902,6 +903,20 @@ Transform:
   - {fileID: 2325128268785183144}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 64.24, z: 0}
+--- !u!114 &5240237996167285865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027601333728969874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92950be8288bc1b428928fd89aca6d38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  character: {fileID: 6027601333728969874}
+  ghost_character: {fileID: 6027601333728969874}
 --- !u!1 &6617425971722054816
 GameObject:
   m_ObjectHideFlags: 0
