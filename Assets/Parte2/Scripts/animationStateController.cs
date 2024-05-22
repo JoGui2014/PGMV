@@ -51,6 +51,14 @@ public class animationStateController : MonoBehaviour
             animator.SetBool(walkingHash, false);
         }
 
+        if(walking && rightPressed){
+            animator.SetBool(rightHash, false);
+        }
+
+        if(walking && leftPressed){
+            animator.SetBool(leftHash, false);
+        }
+
        if (!walking && leftPressed){
             animator.SetBool(leftHash, true);
        }
@@ -58,7 +66,7 @@ public class animationStateController : MonoBehaviour
        if (!walking && !leftPressed){
             animator.SetBool(leftHash, false);
        }
-       
+
        if (!walking && rightPressed){
             animator.SetBool(rightHash, true);
        }

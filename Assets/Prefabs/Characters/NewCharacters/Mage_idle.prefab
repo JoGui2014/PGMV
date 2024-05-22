@@ -414,6 +414,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   character: {fileID: 1760407716228891505}
   ghost_character: {fileID: 8429448937806775690, guid: f023a31d7084ca94c912c267a0a0acfe, type: 3}
+  throwable: {fileID: 9219374425078210489, guid: ecbb1c4abafdf8e4ea06e6e628e6a3ca, type: 3}
 --- !u!114 &9125082483989190896
 MonoBehaviour:
   m_ObjectHideFlags: 0

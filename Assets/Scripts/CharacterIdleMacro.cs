@@ -6,6 +6,7 @@ public class CharacterIdleMacro : MonoBehaviour
 {
     public GameObject character;
     public GameObject ghost_character;
+    public GameObject throwable;
     private Vector3 target;
     private float speed = 0.8f;
     private float speed_rotate = 1.0f;
@@ -21,6 +22,7 @@ public class CharacterIdleMacro : MonoBehaviour
     private string team;
     private bool can_walk = true;
     private GameObject ghost;
+    private GameObject throwed;
 
     private List<GameObject> path = new List<GameObject>();
 
@@ -64,7 +66,7 @@ public class CharacterIdleMacro : MonoBehaviour
         }
 
         if(killed){
-            KillCharacter();
+            Die();
         }
 
         if (rotated){
@@ -82,7 +84,7 @@ public class CharacterIdleMacro : MonoBehaviour
 
     public void spawnGhost() {
       if (can_walk){
-        Vector3 scale = new Vector3(0.08f, 0.08f, 0.08f);
+        Vector3 scale = new Vector3(0.18f, 0.18f, 0.18f);
         ghost = Instantiate(ghost_character);
         ghost.transform.position = curr_pos;
         ghost.transform.rotation = character.transform.rotation;
@@ -126,7 +128,7 @@ public class CharacterIdleMacro : MonoBehaviour
         }
     }
 
-    public void KillCharacter(){
+    public void Die(){
         Dying += speed_die * Time.deltaTime;
         character.transform.localScale = Vector3.Lerp(initial_scale, dead_scale, Dying);
         if( Dying >= 1.0f){
@@ -135,6 +137,14 @@ public class CharacterIdleMacro : MonoBehaviour
         //Meter fumo na posição
         //Opacidade
         //Tocar um som
+    }
+
+    public void KillCharacter(GameObject target){
+        Vector3 scale = new Vector3(0.7f, 0.7f, 0.7f);
+        throwed = Instantiate(throwable, this.transform.position, Quaternion.LookRotation(target.transform.position - this.transform.position));
+        throwed.transform.localScale = scale;
+        ArrowShooter shoot = throwed.GetComponent<ArrowShooter>();
+        shoot.SetTarget(target);
     }
 
     public void rotateCharacter(){
@@ -163,7 +173,7 @@ public class CharacterIdleMacro : MonoBehaviour
     public void moveCharacter() {
       if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
-            create_Path_object();
+            //create_Path_object();
             Vector3 direction = (target - character.transform.position).normalized;
             character.transform.position += direction * speed * Time.deltaTime;
             if(Vector3.Distance(target, character.transform.position) <= 0.1f){

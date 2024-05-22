@@ -106,8 +106,6 @@ public class XMLReader : MonoBehaviour {
     }
 
     void move(XmlNode unit) {
-        Debug.LogWarning("Cheguei AQUI!");
-        Debug.LogWarning("Begin Move!");
         string id = unit.Attributes["id"].Value;
 
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
@@ -119,7 +117,7 @@ public class XMLReader : MonoBehaviour {
             Vector3 move_to_position = terrain.position;
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
             cim.spawnGhost();
-            cim.SetTarget(move_to_position);  // Use the calculated move_to_position
+            cim.SetTarget(move_to_position);
         }
     }
 
@@ -128,15 +126,23 @@ public class XMLReader : MonoBehaviour {
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
+        string type = unit.Attributes["type"].Value;
         string team = unit.Attributes["role"].Value;
+        CharacterIdleMacro piece_attacking = piece.GetComponent<CharacterIdleMacro>();
         Transform terrain = gameBoard.transform.Find($"{x},{y}");
         Vector3 attacked_position = terrain.position;
         List<string> charsToAttack = getEnemies(team, getCharactersInTerrain(attacked_position));
-        print($"{id} atacou");
-        foreach (string loopie in charsToAttack){
-            GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
-            CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
-            aux.Died();
+        if (type == "soldier"){
+            foreach (string loopie in charsToAttack){
+                GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
+                CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
+                aux.Died();
+            }
+        } else {
+            foreach (string loopie in charsToAttack){
+                GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
+                piece_attacking.KillCharacter(piece_attacked);
+            }
         }
 
     }
@@ -242,7 +248,7 @@ public class XMLReader : MonoBehaviour {
     }
 
     Vector3 GetScaleByType(string type) {
-        return type == "catapult" ? new Vector3(0.00005f, 0.00005f, 0.00005f) : new Vector3(0.00015f, 0.00015f, 0.00015f);
+        return type == "catapult" ? new Vector3(0.00005f, 0.00005f, 0.00005f) : new Vector3(0.00025f, 0.00025f, 0.00025f);
     }
 
     void buildBoard(XmlNodeList fields, int width, int height) {

@@ -917,6 +917,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   character: {fileID: 6027601333728969874}
   ghost_character: {fileID: 6027601333728969874}
+  throwable: {fileID: 3476557390782263584, guid: ce49736a46ded314aaf6ff6c9e139cc5, type: 3}
 --- !u!1 &6617425971722054816
 GameObject:
   m_ObjectHideFlags: 0
