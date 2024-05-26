@@ -136,6 +136,7 @@ public class XMLReader : MonoBehaviour {
             foreach (string loopie in charsToAttack){
                 GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
                 CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
+                aux.Smoke();
                 aux.Died();
             }
         } else {

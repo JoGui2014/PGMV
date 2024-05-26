@@ -7,6 +7,7 @@ public class CharacterIdleMacro : MonoBehaviour
     public GameObject character;
     public GameObject ghost_character;
     public GameObject throwable;
+    public GameObject dead_smoke;
     private Vector3 target;
     private float speed = 0.8f;
     private float speed_rotate = 1.0f;
@@ -23,6 +24,7 @@ public class CharacterIdleMacro : MonoBehaviour
     private bool can_walk = true;
     private GameObject ghost;
     private GameObject throwed;
+    private GameObject smoke;
 
     private List<GameObject> path = new List<GameObject>();
 
@@ -128,11 +130,20 @@ public class CharacterIdleMacro : MonoBehaviour
         }
     }
 
+    public void Smoke(){
+        Vector3 scale = new Vector3(0.1f, 0.1f, 0.1f);
+        smoke = Instantiate(dead_smoke);
+        smoke.transform.position = new Vector3(curr_pos.x, curr_pos.y + 0.5f, curr_pos.z);
+        smoke.transform.localScale = scale;
+    }
+
     public void Die(){
         Dying += speed_die * Time.deltaTime;
         character.transform.localScale = Vector3.Lerp(initial_scale, dead_scale, Dying);
         if( Dying >= 1.0f){
+            Destroy(smoke);
             Destroy(character);
+
         }
         //Meter fumo na posição
         //Opacidade

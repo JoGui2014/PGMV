@@ -13,6 +13,7 @@ public class SwordsmanStateController : MonoBehaviour
     int victoryHash;
     bool toAttack = false;
     bool toDefend = false;
+    bool returningFromDodge = false;
 
     // Start is called before the first frame update
     void Start()
@@ -24,45 +25,66 @@ public class SwordsmanStateController : MonoBehaviour
         returnfromDodgeHash = Animator.StringToHash("ReturningFromDodge");
         victoryHash = Animator.StringToHash("Won");
         attackHash = Animator.StringToHash("Attacked");
+
+        StartCoroutine(Battle());
     }
 
+    IEnumerator Battle(){
+       bool running = true;
+       while(running){
+            resetStances();
+            string attackDecision = generateAttack();
+            string defendDecision = generateDefense();
+
+            string defendState = ResultFromTurn(attackDecision, defendDecision);
+            if (defendState == "die"){
+                animator.SetBool(attackHash, false);
+                animator.SetBool(victoryHash, true);
+                running = false;
+            }
+            animator.SetBool(returnfromDodgeHash, false);
+            yield return new WaitForSeconds(1f);
+       }
+    }
     // Update is called once per frame
     void Update()
     {
-        bool killed = animator.GetBool(dieHash);
-        bool blocked = animator.GetBool(blockHash);
-        bool dodged = animator.GetBool(dodgeHash);
-        bool returned = animator.GetBool(returnfromDodgeHash);
-        bool won = animator.GetBool(victoryHash);
-        bool attacked = animator.GetBool(attackHash);
+//        bool killed = animator.GetBool(dieHash);
+//        bool blocked = animator.GetBool(blockHash);
+//        bool dodged = animator.GetBool(dodgeHash);
+//        bool returned = animator.GetBool(returnfromDodgeHash);
+//        bool won = animator.GetBool(victoryHash);
+//        bool attacked = animator.GetBool(attackHash);
+//
+//        DoATurn("attack","die");
 
-
-
-        if (toAttack == true){
-            string decision = generateAttack();
-            if (decision == "attack"){
-                animator.SetBool(attackHash, true);
-                animator.SetBool(blockHash, false);
-                toAttack = false;
-                toDefend = true;
-            }
-        }
-        if (toDefend == true){
-            string decision = generateDefense();
-            if (decision == "block"){
-                animator.SetBool(attackHash, false);
-                animator.SetBool(blockHash, true);
-                toDefend = false;
-                toAttack = true;
-            }
-            if (decision == "die"){
-                animator.SetBool(attackHash, false);
-                animator.SetBool(dieHash, true);
-                animator.SetBool(victoryHash, true);
-                animator.SetBool(victoryHash,false);
-            }
-        }
+//        if (toAttack == true){
+//            string decision = generateAttack();
+//            if (decision == "attack"){
+//                animator.SetBool(attackHash, true);
+//                animator.SetBool(blockHash, false);
+//                toAttack = false;
+//                toDefend = true;
+//            }
+//        }
+//        if (toDefend == true){
+//            string decision = generateDefense();
+//            if (decision == "block"){
+//                animator.SetBool(attackHash, false);
+//                animator.SetBool(blockHash, true);
+//                toDefend = false;
+//                toAttack = true;
+//            }
+//            if (decision == "die"){
+//                animator.SetBool(attackHash, false);
+//                animator.SetBool(dieHash, true);
+//                animator.SetBool(victoryHash, true);
+//                animator.SetBool(victoryHash,false);
+//            }
+//        }
     }
+
+
 
     string generateAttack(){
         float decision =  Random.Range(0f,1f);
@@ -74,15 +96,45 @@ public class SwordsmanStateController : MonoBehaviour
 
     }
 
+    void resetStances(){
+        if (returningFromDodge == true){
+            animator.SetBool(returnfromDodgeHash, true);
+        }
+        animator.SetBool(blockHash, false);
+        animator.SetBool(attackHash, false);
+        animator.SetBool(dodgeHash, false);     
+    }
+
     string generateDefense(){
         float decision =  Random.Range(0f,1f);
         if (decision >= 0.0f && decision < 0.33f){
             return "block";
-        }else if (decision >= 0.34f && decision < 0.66f){
+        }else if (decision >= 0.33f && decision < 0.66f){
             return "dodge";
         }else{
             return "die";
         }
+
+    }
+
+    string ResultFromTurn(string attackAction, string defendAction){
+        if (attackAction == "attack"){
+           animator.SetBool(attackHash, true);
+           if (defendAction == "block"){
+               animator.SetBool(blockHash, true);
+               return defendAction;
+           }
+           if (defendAction == "die"){
+               animator.SetBool(dieHash, true);
+               return defendAction;
+           }
+           if (defendAction == "dodge"){
+               animator.SetBool(dodgeHash, true);
+               returningFromDodge = true;
+               return defendAction;
+           }
+        }
+        return "idle";
 
     }
 }
