@@ -32,7 +32,6 @@ public class SwordsmanStateController : MonoBehaviour
     IEnumerator Battle(){
        bool running = true;
        while(running){
-            resetStances();
             string attackDecision = generateAttack();
             string defendDecision = generateDefense();
 
@@ -42,7 +41,9 @@ public class SwordsmanStateController : MonoBehaviour
                 animator.SetBool(victoryHash, true);
                 running = false;
             }
+
             animator.SetBool(returnfromDodgeHash, false);
+
             yield return new WaitForSeconds(1f);
        }
     }
@@ -98,11 +99,11 @@ public class SwordsmanStateController : MonoBehaviour
 
     void resetStances(){
         if (returningFromDodge == true){
+            animator.SetBool(dodgeHash, false);
             animator.SetBool(returnfromDodgeHash, true);
         }
         animator.SetBool(blockHash, false);
         animator.SetBool(attackHash, false);
-        animator.SetBool(dodgeHash, false);     
     }
 
     string generateDefense(){
@@ -135,6 +136,5 @@ public class SwordsmanStateController : MonoBehaviour
            }
         }
         return "idle";
-
     }
 }
