@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class SwordsmanStateController : MonoBehaviour
 {
-    Animator animator;
+    public GameObject defendSwordsman;
+    public GameObject attackSwordsman;
+    Animator animatorDefend;
+    Animator animatorAttack;
     int attackHash;
     int dodgeHash;
     int returnfromDodgeHash;
@@ -13,12 +16,14 @@ public class SwordsmanStateController : MonoBehaviour
     int victoryHash;
     bool toAttack = false;
     bool toDefend = false;
+    bool toDie = false;
     bool returningFromDodge = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        animator = GetComponent<Animator>();
+        animatorDefend = defendSwordsman.GetComponent<Animator>();
+        animatorAttack = attackSwordsman.GetComponent<Animator>();
         dieHash = Animator.StringToHash("Killed");
         blockHash = Animator.StringToHash("Blocked");
         dodgeHash = Animator.StringToHash("Dodged");
@@ -32,57 +37,48 @@ public class SwordsmanStateController : MonoBehaviour
     IEnumerator Battle(){
        bool running = true;
        while(running){
+            if (animatorDefend.GetBool(returnfromDodgeHash) == true){
+                animatorDefend.SetBool(returnfromDodgeHash, false);
+                returningFromDodge = false;
+            }
             string attackDecision = generateAttack();
             string defendDecision = generateDefense();
 
+            if (toDie == true){
+                attackDecision = "attack"; //se for suposto ele morrer sempre que da return 
+                defendDecision = "die";
+            }
             string defendState = ResultFromTurn(attackDecision, defendDecision);
+
             if (defendState == "die"){
-                animator.SetBool(attackHash, false);
-                animator.SetBool(victoryHash, true);
+                yield return new WaitForSeconds(2f);
+                animatorAttack.SetBool(attackHash, false);
+                animatorAttack.SetBool(victoryHash, true);
                 running = false;
             }
 
-            animator.SetBool(returnfromDodgeHash, false);
-
-            yield return new WaitForSeconds(1f);
+            //animatorDefend.SetBool(returnfromDodgeHash, false);
+            yield return new WaitForSeconds(0.8f);
+            yield return StartCoroutine(ResetStances());
        }
     }
+
+    IEnumerator ResetStances(){
+        animatorDefend.SetBool(blockHash, false);
+        animatorAttack.SetBool(attackHash, false);
+        if (returningFromDodge == true){
+            animatorDefend.SetBool(dodgeHash, false);
+            animatorDefend.SetBool(returnfromDodgeHash, true);
+            toDie = true;
+            yield return new WaitForSeconds(1f);
+        }else{
+            yield return new WaitForSeconds(2f);
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
-//        bool killed = animator.GetBool(dieHash);
-//        bool blocked = animator.GetBool(blockHash);
-//        bool dodged = animator.GetBool(dodgeHash);
-//        bool returned = animator.GetBool(returnfromDodgeHash);
-//        bool won = animator.GetBool(victoryHash);
-//        bool attacked = animator.GetBool(attackHash);
-//
-//        DoATurn("attack","die");
-
-//        if (toAttack == true){
-//            string decision = generateAttack();
-//            if (decision == "attack"){
-//                animator.SetBool(attackHash, true);
-//                animator.SetBool(blockHash, false);
-//                toAttack = false;
-//                toDefend = true;
-//            }
-//        }
-//        if (toDefend == true){
-//            string decision = generateDefense();
-//            if (decision == "block"){
-//                animator.SetBool(attackHash, false);
-//                animator.SetBool(blockHash, true);
-//                toDefend = false;
-//                toAttack = true;
-//            }
-//            if (decision == "die"){
-//                animator.SetBool(attackHash, false);
-//                animator.SetBool(dieHash, true);
-//                animator.SetBool(victoryHash, true);
-//                animator.SetBool(victoryHash,false);
-//            }
-//        }
     }
 
 
@@ -97,14 +93,6 @@ public class SwordsmanStateController : MonoBehaviour
 
     }
 
-    void resetStances(){
-        if (returningFromDodge == true){
-            animator.SetBool(dodgeHash, false);
-            animator.SetBool(returnfromDodgeHash, true);
-        }
-        animator.SetBool(blockHash, false);
-        animator.SetBool(attackHash, false);
-    }
 
     string generateDefense(){
         float decision =  Random.Range(0f,1f);
@@ -120,17 +108,17 @@ public class SwordsmanStateController : MonoBehaviour
 
     string ResultFromTurn(string attackAction, string defendAction){
         if (attackAction == "attack"){
-           animator.SetBool(attackHash, true);
+           animatorAttack.SetBool(attackHash, true);
            if (defendAction == "block"){
-               animator.SetBool(blockHash, true);
+               animatorDefend.SetBool(blockHash, true);
                return defendAction;
            }
            if (defendAction == "die"){
-               animator.SetBool(dieHash, true);
+               animatorDefend.SetBool(dieHash, true);
                return defendAction;
            }
            if (defendAction == "dodge"){
-               animator.SetBool(dodgeHash, true);
+               animatorDefend.SetBool(dodgeHash, true);
                returningFromDodge = true;
                return defendAction;
            }
