@@ -12,6 +12,8 @@ public class CharacterMovement : MonoBehaviour
     private float speed_backwards = 0.03f;
     private float speed_running = 0.16f;
     private float speed_walking = 0.08f;
+    private float gravity = -9.81f;
+
 
 
     // Start is called before the first frame update
@@ -23,10 +25,12 @@ public class CharacterMovement : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+
           rotation = new Vector3(0, Input.GetAxis("Horizontal") * speed_turn, 0);
           Vector3 move = new Vector3(0,0,Input.GetAxis("Vertical"));
-
+          move.y += gravity;
           move = transform.TransformDirection(move);
+
 
 
           controller.Move(move * speed);
