@@ -30,6 +30,8 @@ public class XMLReader : MonoBehaviour {
     [SerializeField] Button buttonPause;
     [SerializeField] Button buttonFoward;
     [SerializeField] Button buttonBack;
+    public Button changeSceneButton;
+
 
     private bool isRunning = false;
     private bool lastTurn = false;
@@ -46,6 +48,7 @@ public class XMLReader : MonoBehaviour {
     }
 
     void Start() {
+        changeSceneButton.gameObject.SetActive(false);
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
         buttonBack.onClick.AddListener(OnClickBack);
@@ -93,7 +96,7 @@ public class XMLReader : MonoBehaviour {
                     attack(unitNode);
                     break;
                 case "hold":
-                    Debug.Log("hold");
+                    hold(unitNode);
                     break;
                 default:
                     Debug.LogWarning("Unknown action: " + action);
@@ -104,6 +107,18 @@ public class XMLReader : MonoBehaviour {
             yield return new WaitForSeconds(2); // Adjust the delay as needed
         }
     }
+
+    void hold(XmlNode unit) {
+        string id = unit.Attributes["id"].Value;
+
+        GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
+
+        if (piece != null) {
+           CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+           cim.setHold(true);
+        }
+    }
+
 
     void move(XmlNode unit) {
         string id = unit.Attributes["id"].Value;
@@ -116,12 +131,13 @@ public class XMLReader : MonoBehaviour {
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             Vector3 move_to_position = terrain.position;
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+            cim.setHold(false);
             cim.spawnGhost();
             cim.SetTarget(move_to_position);
         }
     }
 
-    void attack(XmlNode unit) {
+void attack(XmlNode unit) {
         string id = unit.Attributes["id"].Value;
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
         float x = float.Parse(unit.Attributes["x"].Value);
@@ -129,14 +145,22 @@ public class XMLReader : MonoBehaviour {
         string type = unit.Attributes["type"].Value;
         string team = unit.Attributes["role"].Value;
         CharacterIdleMacro piece_attacking = piece.GetComponent<CharacterIdleMacro>();
+        piece_attacking.setHold(false);
         Transform terrain = gameBoard.transform.Find($"{x},{y}");
         Vector3 attacked_position = terrain.position;
         List<string> charsToAttack = getEnemies(team, getCharactersInTerrain(attacked_position));
         if (type == "soldier"){
             foreach (string loopie in charsToAttack){
                 GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
+                if (piece_attacked.tag == "soldier"){
+                    CharacterIdleMacro piece_attacked_macro = piece_attacked.GetComponent<CharacterIdleMacro>();
+                    if (piece_attacked_macro.isHolding()){
+                        GameObject terrainObject = gameBoard.transform.Find($"{x},{y}")?.gameObject;
+                        PlayerPrefs.SetString("TerrainType", terrainObject.tag);
+                        changeSceneButton.gameObject.SetActive(true);
+                    }
+                }
                 CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
-                aux.Smoke();
                 aux.Died();
             }
         } else {
@@ -147,6 +171,7 @@ public class XMLReader : MonoBehaviour {
         }
 
     }
+
 
     public List<string> getCharactersInTerrain(Vector3 terrainPos){
         List<string> CharsInTerrain = new List<string>();
@@ -220,6 +245,7 @@ public class XMLReader : MonoBehaviour {
                 instance.transform.rotation = Quaternion.Euler(0, 0, 0);
                 instance.transform.localScale = GetScaleByType(type);
                 instance.name = unit.Attributes["id"].Value;
+                instance.tag = type;
             } else {
                 Debug.LogWarning($"Terrain at position ({x},{y}) not found.");
             }
@@ -276,6 +302,7 @@ public class XMLReader : MonoBehaviour {
                 instance.transform.localScale = GetScaledPrefab(prefab, prefabWidth, prefabHeight);
                 instance.transform.rotation = Quaternion.Euler(0, gameBoard.transform.rotation.eulerAngles.y + 90, 0);
                 instance.name = $"{i + 1},{j + 1}";
+                instance.tag = field.Name;
 
                 i++;
                 if (i == width) {

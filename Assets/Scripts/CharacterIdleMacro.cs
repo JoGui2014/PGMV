@@ -17,6 +17,7 @@ public class CharacterIdleMacro : MonoBehaviour
     private bool trace_path = false;
     private bool killed = false;
     private bool rotated = false;
+    private bool holding = false;
     private float Dying = 0.0f;
     private Vector3 curr_pos;
     private Vector3 initial_scale;
@@ -30,6 +31,14 @@ public class CharacterIdleMacro : MonoBehaviour
 
     public void SetCharacter(GameObject newCharacter){
         character = newCharacter;
+    }
+    
+    public void setHold(bool status){
+        holding = status;
+    }
+
+    public bool isHolding(){
+        return holding;
     }
 
     public void SetTarget(Vector3 Pos){

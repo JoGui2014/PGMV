@@ -7,6 +7,16 @@ TagManager:
   - SecondaryCamera
   - board
   - SecondBoard
+  - sea
+  - forest
+  - village
+  - desert
+  - mountain
+  - plain
+  - soldier
+  - archer
+  - mage
+  - catapult
   layers:
   - Default
   - TransparentFX
