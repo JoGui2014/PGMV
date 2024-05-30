@@ -42,6 +42,7 @@ public class ArrowShooter : MonoBehaviour
             }
             if(Vector3.Distance(target.transform.position, arrowPrefab.transform.position) <= 0.1f){
                 CharacterIdleMacro target_macro = target.GetComponent<CharacterIdleMacro>();
+                target_macro.DeadSound();
                 target_macro.Smoke();
                 Destroy(arrowPrefab);
             }

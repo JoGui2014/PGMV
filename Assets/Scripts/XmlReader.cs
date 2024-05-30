@@ -32,6 +32,12 @@ public class XMLReader : MonoBehaviour {
     [SerializeField] Button buttonBack;
     public Button changeSceneButton;
 
+    public AudioSource ArcherAttack;
+    public AudioSource SoldierAttack;
+    public AudioSource MageAttack;
+    public AudioSource CatapultAttack;
+    public AudioSource Ambient;
+
 
     private bool isRunning = false;
     private bool lastTurn = false;
@@ -161,10 +167,14 @@ void attack(XmlNode unit) {
                     }
                 }
                 CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
+                SoldierAttack.Play();
+                aux.DeadSound();
+                aux.Smoke();
                 aux.Died();
             }
         } else {
             foreach (string loopie in charsToAttack){
+                PlaySoundByType(type);
                 GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
                 piece_attacking.KillCharacter(piece_attacked);
             }
@@ -172,6 +182,17 @@ void attack(XmlNode unit) {
 
     }
 
+    void PlaySoundByType(string type){
+        if (type == "archer"){
+            ArcherAttack.Play();
+        }
+        if (type == "catapult"){
+            CatapultAttack.Play();
+        }
+        if (type == "mage"){
+            MageAttack.Play();
+        }
+    }
 
     public List<string> getCharactersInTerrain(Vector3 terrainPos){
         List<string> CharsInTerrain = new List<string>();
@@ -364,6 +385,7 @@ void attack(XmlNode unit) {
         Debug.Log("Pause clicked");
         if (hasBoard) {
             if (!isRunning) {
+                Ambient.Play();
                 StartCoroutine(playLoop());
             } else {
                 isRunning = false;

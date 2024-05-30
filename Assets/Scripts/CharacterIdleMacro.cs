@@ -8,6 +8,7 @@ public class CharacterIdleMacro : MonoBehaviour
     public GameObject ghost_character;
     public GameObject throwable;
     public GameObject dead_smoke;
+    public AudioSource DeathSound;
     private Vector3 target;
     private float speed = 0.8f;
     private float speed_rotate = 1.0f;
@@ -157,6 +158,10 @@ public class CharacterIdleMacro : MonoBehaviour
         //Meter fumo na posição
         //Opacidade
         //Tocar um som
+    }
+
+    public void DeadSound(){
+        DeathSound.Play();
     }
 
     public void KillCharacter(GameObject target){
