@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!DOCTYPE game SYSTEM "play-out.dtd">
 <game>
 	<roles>
 		<role name="Bruno"/>
@@ -29,8 +28,8 @@
 			<unit id="4" role="Ana"   type="soldier"  action="move_to" x="2" y="2" />
 			<unit id="5" role="Bruno" type="mage"     action="move_to" x="2" y="3" />
 			<unit id="6" role="Ana"   type="mage"     action="move_to" x="3" y="3" />
-			<unit id="7" role="Bruno" type="catapult" action="move_to" x="2" y="4" />
-			<unit id="8" role="Ana"   type="catapult" action="move_to" x="3" y="4" />
+			<unit id="7" role="Bruno" type="catapult" action="hold" x="1" y="4" />
+			<unit id="8" role="Ana"   type="catapult" action="hold" x="4" y="4" />
 		</turn>
 		<turn>
 			<unit id="1" role="Bruno" type="archer"   action="hold"   x="2" y="1" />
@@ -39,14 +38,14 @@
 			<unit id="4" role="Ana"   type="soldier"  action="attack" x="2" y="2" />
 			<unit id="5" role="Bruno" type="mage"     action="hold"   x="2" y="3" />
 			<unit id="6" role="Ana"   type="mage"     action="attack" x="2" y="3" />
-			<unit id="7" role="Bruno" type="catapult" action="hold"   x="2" y="4" />
-			<unit id="8" role="Ana"   type="catapult" action="attack" x="2" y="4" />
+			<unit id="7" role="Bruno" type="catapult" action="hold"   x="1" y="4" />
+			<unit id="8" role="Ana"   type="catapult" action="attack" x="1" y="4" />
 		</turn>
 		<turn>
 			<unit id="2" role="Ana" type="archer"   action="hold" x="3" y="1" />
 			<unit id="4" role="Ana" type="soldier"  action="hold" x="2" y="2" />
 			<unit id="6" role="Ana" type="mage"     action="hold" x="3" y="3" />
-			<unit id="8" role="Ana" type="catapult" action="hold" x="3" y="4" />
+			<unit id="8" role="Ana" type="catapult" action="hold" x="4" y="4" />
 		</turn>
 	</turns>
 </game>

@@ -16,25 +16,33 @@ public class CharacterMovement : MonoBehaviour
 
 
 
-    // Start is called before the first frame update
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
     }
 
-    // Update is called once per frame
+
     void FixedUpdate()
     {
 
           rotation = new Vector3(0, Input.GetAxis("Horizontal") * speed_turn, 0);
+          transform.Rotate(rotation);
+
+
           Vector3 move = new Vector3(0,0,Input.GetAxis("Vertical"));
+          print(move);
+          if (this.transform.position.x + move.z >= 200){
+            move = new Vector3(0,0,0);
+          }
+          if (this.transform.position.z + move.z >= 200){
+            move = new Vector3(0,0,0);
+          }
           move.y += gravity;
           move = transform.TransformDirection(move);
-
-
-
           controller.Move(move * speed);
-          transform.Rotate(rotation);
+
+
 
           if (Input.GetKey("s")){
             speed = speed_backwards;
@@ -45,22 +53,6 @@ public class CharacterMovement : MonoBehaviour
           if (!Input.GetKey("left shift") && !Input.GetKey("s")){
             speed = speed_walking;
           }
-
-//
-//        transform.Translate(Vector3.forward * Input.GetAxis("Vertical") * speed);
-//        transform.Rotate(Vector3.up * Input.GetAxis("Horizontal") * speed_turn);
-//
-//        if (Input.GetKey("s")){
-//            speed = speed_backwards;
-//        }
-//
-//        if (Input.GetKey("left shift")){
-//            speed = speed_running;
-//        }
-//
-//        if (!Input.GetKey("left shift") && !Input.GetKey("s")){
-//            speed = speed_walking;
-//        }
 
     }
 }

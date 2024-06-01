@@ -17,6 +17,7 @@ public class ProceduralTerrainGenerator : MonoBehaviour
     public Material plain;
     public Material desert;
     public Material forest;
+    public GameObject parent;
 
     private Terrain terrain;
     private TerrainData terrainData;
@@ -47,6 +48,7 @@ public class ProceduralTerrainGenerator : MonoBehaviour
     void GenerateTerrain()
     {
         GameObject terrainObject = new GameObject("ProceduralTerrain");
+        terrainObject.transform.parent = parent.transform;
         terrain = terrainObject.AddComponent<Terrain>();
         terrainData = new TerrainData
         {
@@ -195,7 +197,7 @@ public class ProceduralTerrainGenerator : MonoBehaviour
                         {
                             Quaternion rotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
 
-                            Instantiate(GetPrefab(objData.type), position, rotation);
+                            Instantiate(GetPrefab(objData.type), position, rotation, parent.transform);
 
                             placedPositions.Add(position); // Add the new position to the list
                             placedObjectsCount[objData.type]++;

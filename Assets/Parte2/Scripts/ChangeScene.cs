@@ -4,26 +4,36 @@ using UnityEngine.SceneManagement;
 
 public class ChangeScene : MonoBehaviour
 {
-    public string sceneName; // Nome da cena para a qual queremos mudar
+    public string sceneName;
+    public GameObject room;
 
     private Button myButton;
 
     void Start()
     {
-        // Obter a referência ao componente Button
+        if (GameObject.Find("Room") == null){
+            room = SceneManager.GetSceneAt(0).GetRootGameObjects()[0];
+        }else{
+            room = GameObject.Find("Room");
+        }
+
         myButton = GetComponent<Button>();
-
-        // Inicialmente, ocultar o botão
-        // Ativa dentro do if
-       // myButton.gameObject.SetActive(false);
-
-        // Adicionar o listener ao botão para mudar de cena quando clicado
         myButton.onClick.AddListener(ChangeToScene);
     }
 
     void ChangeToScene()
     {
-        // Carregar a cena especificada
-        SceneManager.LoadScene(sceneName);
+        if (SceneManager.sceneCount != 2){
+            room.SetActive(false);
+            SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
+
+        }else{
+            Scene thisScene = SceneManager.GetSceneAt(1);
+            SceneManager.UnloadSceneAsync(thisScene);
+            room.SetActive(true);
+
+        }
+
+
     }
 }

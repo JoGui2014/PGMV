@@ -17,11 +17,8 @@ public class ArrowShooter : MonoBehaviour
     public void SetTarget(GameObject newTarget){
         target = newTarget;
         BoxCollider targetCollider = target.GetComponent<BoxCollider>();
-        print(this.transform.position);
-        print(target.transform.position);
         halfwayPoint = (target.transform.position + arrowPrefab.transform.position)/2;
         halfwayPoint.y += targetCollider.size.y * 2f;
-        print(halfwayPoint);
     }
 
 
@@ -33,15 +30,9 @@ public class ArrowShooter : MonoBehaviour
             Shoot(halfwayPoint);
             halfwayPoint = Vector3.MoveTowards(halfwayPoint, target.transform.position, (arrowSpeed + 1.25f) * Time.deltaTime);
 
-            if (distanceToTarget <= arrowPrefab.transform.localScale.z)
-            {
-//                target.SetActive(false);
-//                print("Target hit!");
-                  CharacterIdleMacro target_macro = target.GetComponent<CharacterIdleMacro>();
-                  target_macro.Died();
-            }
             if(Vector3.Distance(target.transform.position, arrowPrefab.transform.position) <= 0.1f){
                 CharacterIdleMacro target_macro = target.GetComponent<CharacterIdleMacro>();
+                target_macro.Died();
                 target_macro.DeadSound();
                 target_macro.Smoke();
                 Destroy(arrowPrefab);

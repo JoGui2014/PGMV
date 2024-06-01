@@ -26,6 +26,7 @@ public class XMLReader : MonoBehaviour {
     [SerializeField] GameObject gameBoard;
     private XmlDocument xmlDoc = new XmlDocument();
     private XmlNode currTurn;
+    private int line = 0;
     private XmlNode firstTurn;
     [SerializeField] Button buttonPause;
     [SerializeField] Button buttonFoward;
@@ -39,6 +40,7 @@ public class XMLReader : MonoBehaviour {
     public AudioSource CatapultAttack;
     public AudioSource Ambient;
 
+    private Dictionary<string,(float, float)> CharToTerrain = new Dictionary<string, (float, float)>();
 
     private bool isRunning = false;
     private bool lastTurn = false;
@@ -51,10 +53,18 @@ public class XMLReader : MonoBehaviour {
     private float boardDepth;
     private List<GameObject> gameObjects = new List<GameObject>();
 
+
     public void StartReadingXML(string xmlFilePath) {
         ReadXML(xmlFilePath);
-        Ambient.Play();
         numberTurns = 0;
+    }
+
+    void OnEnable(){
+        
+        if (isRunning){
+            Ambient.Play();
+            StartCoroutine(PlayLoop());
+        }
     }
 
     void Start() {
@@ -65,11 +75,24 @@ public class XMLReader : MonoBehaviour {
         buttonRestart.onClick.AddListener(RestartGame);
     }
 
+    void Update() {
+         CheckInput(KeyCode.RightArrow, OnClickForward);
+         CheckInput(KeyCode.LeftArrow, OnClickBack);
+         CheckInput(KeyCode.Space, OnClickPause);
+         CheckInput(KeyCode.R, RestartGame);
+    }
+
+    void CheckInput(KeyCode key, System.Action action) {
+         if (Input.GetKeyDown(key)) {
+            action.Invoke();
+         }
+    }
+
     void ReadXML(string xmlFilePath) {
         try {
             xmlDoc.Load(xmlFilePath);
             XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-            
+
             firstTurn = turnNodes?.FirstChild;
             currTurn = firstTurn;
 
@@ -86,27 +109,36 @@ public class XMLReader : MonoBehaviour {
         }
     }
 
-    IEnumerator ProcessActions(XmlNodeList unitNodes, bool skip) {
+    IEnumerator ProcessActions(XmlNodeList unitNodes, bool skip, int initialLine) {
+        int count = 0;
         turns.text = $"Nº Turns: {numberTurns}";
         foreach (XmlNode unitNode in unitNodes) {
             string action = unitNode.Attributes["action"].Value;
             playerName = unitNode.Attributes["role"].Value;
-
             // Update player name UI
             player.text = $"Playing: {playerName}";
-
+            if (count < initialLine){
+                action = "skip";
+                count += 1;
+            }
             switch (action) {
                 case "spawn":
                     SummonPieces(unitNode);
+                    line += 1;
                     break;
                 case "move_to":
                     Move(unitNode, skip);
+                    line += 1;
                     break;
                 case "attack":
                     yield return StartCoroutine(Attack(unitNode, skip));
+                    line += 1;
                     break;
                 case "hold":
                     Hold(unitNode);
+                    line += 1;
+                    break;
+                case "skip":
                     break;
                 default:
                     Debug.LogWarning("Unknown action: " + action);
@@ -116,6 +148,7 @@ public class XMLReader : MonoBehaviour {
                 yield return new WaitForSeconds(2);
             }
         }
+        line = 0;
     }
 
     void Hold(XmlNode unit) {
@@ -138,22 +171,50 @@ public class XMLReader : MonoBehaviour {
         if (piece != null) {
             float x = float.Parse(unit.Attributes["x"].Value);
             float y = float.Parse(unit.Attributes["y"].Value);
+            CharToTerrain[id] = (x,y);
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             Vector3 move_to_position = terrain.position;
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
             if(skip) {
-                //Vector3 direction = (move_to_position - piece.transform.position).normalized;
-                //piece.transform.position = piece.transform.position + direction;
-                //cim.SetCurPos(piece.transform.position + direction);
                 piece.transform.position = move_to_position;
                 cim.SetCurPos(move_to_position);
             } else {
+                if(unit.Attributes["type"].Value == "mage")
+                   StartCoroutine(MoveWithJump(piece, move_to_position, 1.0f));
+                else{
+                   cim.SetTarget(move_to_position);
+                }
+
                 cim.setHold(false);
                 cim.spawnGhost();
                 cim.SetTarget(move_to_position);
             }
         }
     }
+
+    IEnumerator MoveWithJump(GameObject piece, Vector3 targetPosition, float speed) {
+        BoxCollider boxCollider = piece.GetComponent<BoxCollider>();
+        CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+        Vector3 startPosition = piece.transform.position;
+        Vector3 midPosition = new Vector3(startPosition.x, startPosition.y + (boxCollider.size.y*0.5f), startPosition.z);
+        Vector3 targetMidPosition = new Vector3(targetPosition.x, midPosition.y, targetPosition.z);
+        while (Vector3.Distance(piece.transform.position, midPosition) > 0.01f) {
+            piece.transform.position = Vector3.MoveTowards(piece.transform.position, midPosition, speed * Time.deltaTime);
+            yield return null;
+        }
+        while (Vector3.Distance(piece.transform.position, targetMidPosition) > 0.01f) {
+            cim.SetTarget(targetMidPosition);
+            yield return null;
+        }
+        while (Vector3.Distance(piece.transform.position, targetPosition) > 0.01f) {
+            piece.transform.position = Vector3.MoveTowards(piece.transform.position, targetPosition, speed * Time.deltaTime);
+            yield return null;
+        }
+        piece.transform.position = targetPosition;
+    }
+
+
+
     IEnumerator Attack(XmlNode unit, bool skip) {
         string id = unit.Attributes["id"].Value;
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
@@ -165,7 +226,7 @@ public class XMLReader : MonoBehaviour {
         piece_attacking.setHold(false);
         Transform terrain = gameBoard.transform.Find($"{x},{y}");
         Vector3 attacked_position = terrain.position;
-        List<string> charsToAttack = GetEnemies(team, GetCharactersInTerrain(attacked_position));
+        List<string> charsToAttack = GetEnemies(team, GetCharactersInTerrain(x, y));
         foreach (string loopie in charsToAttack) {
             GameObject piece_attacked = gameBoard.transform.Find($"{loopie}")?.gameObject;
             if (skip) {
@@ -195,7 +256,7 @@ public class XMLReader : MonoBehaviour {
         }
     }
 
-    
+
 
     void PlaySoundByType(string type){
         if (type == "archer"){
@@ -209,15 +270,19 @@ public class XMLReader : MonoBehaviour {
         }
     }
 
-    public List<string> GetCharactersInTerrain(Vector3 terrainPos){
+    public List<string> GetCharactersInTerrain(float Posx, float Posy){
         List<string> CharsInTerrain = new List<string>();
         for (int i = 1; i <= numPieces; i++)
         {
             string id = i.ToString();
-            GameObject c = gameBoard.transform.Find($"{id}")?.gameObject;
-            if (c != null && Vector3.Distance(c.transform.position, terrainPos) <= 0.1f){
-                CharsInTerrain.Add(id);
+            if (CharToTerrain.ContainsKey(id)){
+                (float, float) terrain = CharToTerrain[id];
+                 GameObject c = gameBoard.transform.Find($"{id}")?.gameObject;
+                 if (c != null && terrain.Item1 == Posx && terrain.Item2 == Posy){
+                     CharsInTerrain.Add(id);
+                 }
             }
+            
         }
         return CharsInTerrain;
     }
@@ -238,6 +303,7 @@ public class XMLReader : MonoBehaviour {
 
    void SummonPieces(XmlNode unit) {
         numPieces++;
+        string id = unit.Attributes["id"].Value;
         string type = unit.Attributes["type"].Value;
         float x = float.Parse(unit.Attributes["x"].Value);
         float y = float.Parse(unit.Attributes["y"].Value);
@@ -277,6 +343,7 @@ public class XMLReader : MonoBehaviour {
                 if (type == "catapult"){
                     character.SetCatapult();
                 }
+                CharToTerrain.Add(id, (x,y));
                 instance.transform.position = randomPosition;
                 instance.transform.rotation = Quaternion.Euler(0, 0, 0);
                 instance.transform.localScale = GetScaleByType(type);
@@ -384,7 +451,7 @@ public class XMLReader : MonoBehaviour {
             onPlay = true;
             if (currTurn != null) {
                 numberTurns += 1;
-                yield return StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), false));
+                yield return StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), false, line));
                 if (currTurn.NextSibling != null) {
                     currTurn = currTurn.NextSibling;
                 } else {
@@ -415,7 +482,8 @@ public class XMLReader : MonoBehaviour {
     private void OnClickPause() {
         Debug.Log("Pause clicked");
         if (hasBoard) {
-            if (!isRunning) {
+            if (!isRunning && !onPlay) {
+                Ambient.Play();
                 StartCoroutine(PlayLoop());
             } else {
                 isRunning = false;
@@ -430,7 +498,7 @@ public class XMLReader : MonoBehaviour {
             if(!onPlay){
                 if (currTurn != null && !lastTurn) {
                     numberTurns += 1;
-                    StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), true));
+                    StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), true, line));
                     if (currTurn.NextSibling != null) {
                         currTurn = currTurn.NextSibling;
                     } else {
@@ -462,7 +530,6 @@ public class XMLReader : MonoBehaviour {
         XmlNodeList unitNodes = turn.SelectNodes("./unit");
         foreach (XmlNode unitNode in unitNodes) {
             string action = unitNode.Attributes["action"].Value;
-
             switch (action) {
                 case "spawn":
                     break;

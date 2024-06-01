@@ -10,10 +10,15 @@ public class GoBackButton : MonoBehaviour
 
     void Start() {
         button.onClick.AddListener(changeCamera);
-
     }
-   void changeCamera() {
+
+    void Update() {
+       if(Input.GetKeyDown(KeyCode.Escape))
+         changeCamera();
+    }
+
+    void changeCamera() {
         secondaryCamera.SetActive(false);
         mainCamera.SetActive(true);
-   }
+    }
 }

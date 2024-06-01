@@ -51,6 +51,7 @@ public class CharacterIdleMacro : MonoBehaviour
     }
 
     public void SetCatapult(){
+        dead_scale = new Vector3(0.000008f, 0.000008f, 0.000008f);
         can_walk = false;
     }
 
@@ -159,9 +160,6 @@ public class CharacterIdleMacro : MonoBehaviour
             character.SetActive(false);
 
         }
-        //Meter fumo na posição
-        //Opacidade
-        //Tocar um som
     }
 
     public void DeadSound(){
@@ -171,13 +169,18 @@ public class CharacterIdleMacro : MonoBehaviour
     public void KillCharacter(GameObject target){
         Vector3 scale = new Vector3(0.7f, 0.7f, 0.7f);
         throwed = Instantiate(throwable, this.transform.position, Quaternion.LookRotation(target.transform.position - this.transform.position));
+        if(throwed.name.Contains("fireball")){
+            scale = new Vector3(15f,15f,15f);
+        }
+        if(throwed.name.Contains("SteelBall")){
+            scale = new Vector3(15f,15f,15f);
+        }
         throwed.transform.localScale = scale;
         ArrowShooter shoot = throwed.GetComponent<ArrowShooter>();
         shoot.SetTarget(target);
     }
 
     public void rotateCharacter(){
-      if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
              Vector3 relativePosition = target - character.transform.position;
              if (relativePosition != new Vector3(0f,0f,0f)){
@@ -186,15 +189,14 @@ public class CharacterIdleMacro : MonoBehaviour
                  character.transform.rotation = Quaternion.Lerp(character.transform.rotation, targetRotation, speed_rotate * Time.deltaTime);
 
                  if (Quaternion.Angle(character.transform.rotation, targetRotation) < 1.0f){
-
+                     if (!can_walk){
+                        target = new Vector3(0f,0f,0f);
+                     }
                      rotated = true;
                  }
              }
 
         }
-      }
-
-
     }
 
 

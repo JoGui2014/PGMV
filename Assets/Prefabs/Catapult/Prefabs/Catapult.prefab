@@ -871,6 +871,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8099851757618285668}
   - component: {fileID: 5240237996167285865}
+  - component: {fileID: 2474279541537235025}
   m_Layer: 0
   m_Name: Catapult
   m_TagString: Untagged
@@ -886,7 +887,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6027601333728969874}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.53169423, z: 0, w: 0.8469364}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -7.64, y: 5.047, z: -23.09}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 1
@@ -903,7 +904,7 @@ Transform:
   - {fileID: 2325128268785183144}
   - {fileID: 8725220749501377204}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 64.24, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5240237996167285865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -921,6 +922,27 @@ MonoBehaviour:
   throwable: {fileID: 3476557390782263584, guid: ce49736a46ded314aaf6ff6c9e139cc5, type: 3}
   dead_smoke: {fileID: 1273915125232972, guid: 73767e07adddc394d82b994801f89bbb, type: 3}
   DeathSound: {fileID: 3172848064697746250}
+--- !u!65 &2474279541537235025
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027601333728969874}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9.056355, y: 4.1840606, z: 5.245839}
+  m_Center: {x: 0.97296864, y: -0.97296983, z: 1.4420801}
 --- !u!1 &6617425971722054816
 GameObject:
   m_ObjectHideFlags: 0
