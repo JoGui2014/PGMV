@@ -62,6 +62,10 @@ public class CharacterIdleMacro : MonoBehaviour
         killed = true;
     }
 
+    public void SetCurPos(Vector3 curPos){
+        curr_pos = curPos;
+    }
+
     void Start()
     {
         curr_pos = character.transform.position;
@@ -152,7 +156,7 @@ public class CharacterIdleMacro : MonoBehaviour
         character.transform.localScale = Vector3.Lerp(initial_scale, dead_scale, Dying);
         if( Dying >= 1.0f){
             Destroy(smoke);
-            Destroy(character);
+            character.SetActive(false);
 
         }
         //Meter fumo na posição
