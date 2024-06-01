@@ -30,8 +30,18 @@ public class XMLReader : MonoBehaviour{
         StartCoroutine(play(currTurn));
     }
 
+<<<<<<< Updated upstream
     void ReadXML(string xmlFilePath){
         xmlDoc.Load(xmlFilePath);
+=======
+    void Start() {
+        DontDestroyOnLoad(this);
+        changeSceneButton.gameObject.SetActive(false);
+        buttonPause.onClick.AddListener(OnClickPause);
+        buttonFoward.onClick.AddListener(OnClickForward);
+        buttonBack.onClick.AddListener(OnClickBack);
+    }
+>>>>>>> Stashed changes
 
         XmlNode boardNode = xmlDoc.SelectSingleNode("//board");
         if (boardNode != null){
