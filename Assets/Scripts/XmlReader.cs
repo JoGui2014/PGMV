@@ -21,7 +21,7 @@ public class XMLReader : MonoBehaviour {
     public int height;
     public TMP_Text player;
     public TMP_Text turns;
-
+    public TMP_Text gameOverText;
     private bool waitForInput = true;
     [SerializeField] GameObject gameBoard;
     private XmlDocument xmlDoc = new XmlDocument();
@@ -68,6 +68,7 @@ public class XMLReader : MonoBehaviour {
     }
 
     void Start() {
+       // gameOverText.gameObject.SetActive(false);
         changeSceneButton.gameObject.SetActive(false);
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
@@ -80,6 +81,12 @@ public class XMLReader : MonoBehaviour {
          CheckInput(KeyCode.LeftArrow, OnClickBack);
          CheckInput(KeyCode.Space, OnClickPause);
          CheckInput(KeyCode.R, RestartGame);
+         if(lastTurn) {
+            gameOverText.gameObject.SetActive(true);
+         } else {
+            gameOverText.gameObject.SetActive(false);
+         }
+            
     }
 
     void CheckInput(KeyCode key, System.Action action) {
@@ -456,19 +463,26 @@ public class XMLReader : MonoBehaviour {
                     currTurn = currTurn.NextSibling;
                 } else {
                     lastTurn = true;
+                   
                 }
             } else {
                 lastTurn = true;
+                
             }
             onPlay = false;
         }
+        
+        
     }
+
+    
 
     private void RestartGame() {
         if (hasBoard) {
             Debug.Log("Restart clicked");
             isRunning = false;
             if(!onPlay) {
+                lastTurn = false;
                 foreach (GameObject game in gameObjects) {
                     Destroy(game);
                 }
