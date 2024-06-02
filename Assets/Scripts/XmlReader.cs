@@ -61,14 +61,14 @@ public class XMLReader : MonoBehaviour {
 
     void OnEnable(){
         
-        if (isRunning){
+        if (isRunning && !lastTurn){
             Ambient.Play();
             StartCoroutine(PlayLoop());
         }
     }
 
     void Start() {
-       // gameOverText.gameObject.SetActive(false);
+        gameOverText.gameObject.SetActive(false);
         changeSceneButton.gameObject.SetActive(false);
         buttonPause.onClick.AddListener(OnClickPause);
         buttonFoward.onClick.AddListener(OnClickForward);
@@ -80,13 +80,7 @@ public class XMLReader : MonoBehaviour {
          CheckInput(KeyCode.RightArrow, OnClickForward);
          CheckInput(KeyCode.LeftArrow, OnClickBack);
          CheckInput(KeyCode.Space, OnClickPause);
-         CheckInput(KeyCode.R, RestartGame);
-         if(lastTurn) {
-            gameOverText.gameObject.SetActive(true);
-         } else {
-            gameOverText.gameObject.SetActive(false);
-         }
-            
+         CheckInput(KeyCode.R, RestartGame); 
     }
 
     void CheckInput(KeyCode key, System.Action action) {
@@ -222,7 +216,7 @@ public class XMLReader : MonoBehaviour {
 
 
 
-    IEnumerator Attack(XmlNode unit, bool skip) {
+  IEnumerator Attack(XmlNode unit, bool skip) {
         string id = unit.Attributes["id"].Value;
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
         float x = float.Parse(unit.Attributes["x"].Value);
@@ -240,27 +234,37 @@ public class XMLReader : MonoBehaviour {
                 piece_attacked.SetActive(false);
             } else {
                 if (type == "soldier") {
-                    if (piece_attacked.tag == "soldier") {
-                        CharacterIdleMacro piece_attacked_macro = piece_attacked.GetComponent<CharacterIdleMacro>();
-                        if (piece_attacked_macro.isHolding()) {
-                            GameObject terrainObject = gameBoard.transform.Find($"{x},{y}")?.gameObject;
-                            PlayerPrefs.SetString("TerrainType", terrainObject.tag);
-                            changeSceneButton.gameObject.SetActive(true);
-                            yield return new WaitForSeconds(10);
-                            changeSceneButton.gameObject.SetActive(false);
-                        }
+                    if(IsTerrainAdjacent(id, x, y)){
+                        if (piece_attacked.tag == "soldier") {
+                            CharacterIdleMacro piece_attacked_macro = piece_attacked.GetComponent<CharacterIdleMacro>();
+                            if (piece_attacked_macro.isHolding()) {
+                                GameObject terrainObject = gameBoard.transform.Find($"{x},{y}")?.gameObject;
+                                PlayerPrefs.SetString("TerrainType", terrainObject.tag);
+                                changeSceneButton.gameObject.SetActive(true);
+                                yield return new WaitForSeconds(10);
+                                changeSceneButton.gameObject.SetActive(false);
+                            }
+                            }
+                            CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
+                            SoldierAttack.Play();
+                            aux.DeadSound();
+                            aux.Smoke();
+                            aux.Died();
                     }
-                    CharacterIdleMacro aux = piece_attacked.GetComponent<CharacterIdleMacro>();
-                    SoldierAttack.Play();
-                    aux.DeadSound();
-                    aux.Smoke();
-                    aux.Died();
                 } else {
                     PlaySoundByType(type);
                     piece_attacking.KillCharacter(piece_attacked);
                 }
             }
         }
+    }
+
+    bool IsTerrainAdjacent(string id, float posx, float posy){
+        (float, float) currentTerrain = CharToTerrain[id];
+        if((currentTerrain.Item1 + 1 == posx || currentTerrain.Item1 - 1 == posx || currentTerrain.Item1 == posx) && (currentTerrain.Item2 + 1 == posy || currentTerrain.Item2 - 1 == posy || currentTerrain.Item2 == posy)){
+            return true;
+        }
+        return false;
     }
 
 
@@ -308,7 +312,7 @@ public class XMLReader : MonoBehaviour {
     }
 
 
-   void SummonPieces(XmlNode unit) {
+  void SummonPieces(XmlNode unit) {
         numPieces++;
         string id = unit.Attributes["id"].Value;
         string type = unit.Attributes["type"].Value;
@@ -320,43 +324,49 @@ public class XMLReader : MonoBehaviour {
         if (prefab != null) {
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             if (terrain != null) {
-                Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-                Vector3 terrainPosition = terrain.position;
+                List<string> charsinthisterrain = GetCharactersInTerrain(x,y);
+                if(charsinthisterrain.Count < 4){
+                    Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+                    Vector3 terrainPosition = terrain.position;
 
 
-                // Calculate the size of the piece's bounding box
-                GameObject tempInstance = Instantiate(prefab);
-                Renderer pieceRenderer = tempInstance.GetComponentInChildren<Renderer>();
-                if (pieceRenderer == null) {
-                    Debug.LogWarning($"No Renderer found for the prefab type '{type}'.");
+                    // Calculate the size of the piece's bounding box
+                    GameObject tempInstance = Instantiate(prefab);
+                    Renderer pieceRenderer = tempInstance.GetComponentInChildren<Renderer>();
+                    if (pieceRenderer == null) {
+                        Debug.LogWarning($"No Renderer found for the prefab type '{type}'.");
+                        Destroy(tempInstance);
+                        return;
+                    }
+                    Vector3 pieceSize = pieceRenderer.bounds.size;
                     Destroy(tempInstance);
-                    return;
+
+                    // Generate random positions within the terrain bounds, adjusted for the piece size
+                    float halfPieceWidth = pieceSize.x / 2;
+                    float halfPieceDepth = pieceSize.y / 2;
+                    float randomX = UnityEngine.Random.Range(terrainPosition.x - terrainSize.x / 2 + halfPieceWidth, terrainPosition.x + terrainSize.x / 2 - halfPieceWidth);
+                    float randomY = terrainPosition.y + GetDepthByType(type);
+                    float randomZ = UnityEngine.Random.Range(terrainPosition.z - terrainSize.z / 2 + halfPieceDepth, terrainPosition.z + terrainSize.z / 2 - halfPieceDepth);
+
+                    Vector3 randomPosition = new Vector3(randomX, randomY, randomZ);
+
+                    GameObject instance = Instantiate(prefab, gameBoard.transform);
+                    CharacterIdleMacro character = instance.GetComponent<CharacterIdleMacro>();
+                    character.SetTeam(team);
+                    if (type == "catapult"){
+                        character.SetCatapult();
+                    }
+                    CharToTerrain.Add(id, (x,y));
+                    instance.transform.position = randomPosition;
+                    instance.transform.rotation = Quaternion.Euler(0, 0, 0);
+                    instance.transform.localScale = GetScaleByType(type);
+                    instance.name = unit.Attributes["id"].Value;
+                    instance.tag = type;
+                    gameObjects.Add(instance);
+                }else{
+                    Debug.LogWarning($"Terrain at position ({x},{y}) has already 4 pieces.");
                 }
-                Vector3 pieceSize = pieceRenderer.bounds.size;
-                Destroy(tempInstance);
 
-                // Generate random positions within the terrain bounds, adjusted for the piece size
-                float halfPieceWidth = pieceSize.x / 2;
-                float halfPieceDepth = pieceSize.y / 2;
-                float randomX = UnityEngine.Random.Range(terrainPosition.x - terrainSize.x / 2 + halfPieceWidth, terrainPosition.x + terrainSize.x / 2 - halfPieceWidth);
-                float randomY = terrainPosition.y + GetDepthByType(type);
-                float randomZ = UnityEngine.Random.Range(terrainPosition.z - terrainSize.z / 2 + halfPieceDepth, terrainPosition.z + terrainSize.z / 2 - halfPieceDepth);
-
-                Vector3 randomPosition = new Vector3(randomX, randomY, randomZ);
-
-                GameObject instance = Instantiate(prefab, gameBoard.transform);
-                CharacterIdleMacro character = instance.GetComponent<CharacterIdleMacro>();
-                character.SetTeam(team);
-                if (type == "catapult"){
-                    character.SetCatapult();
-                }
-                CharToTerrain.Add(id, (x,y));
-                instance.transform.position = randomPosition;
-                instance.transform.rotation = Quaternion.Euler(0, 0, 0);
-                instance.transform.localScale = GetScaleByType(type);
-                instance.name = unit.Attributes["id"].Value;
-                instance.tag = type;
-                gameObjects.Add(instance);
             } else {
                 Debug.LogWarning($"Terrain at position ({x},{y}) not found.");
             }
@@ -463,10 +473,12 @@ public class XMLReader : MonoBehaviour {
                     currTurn = currTurn.NextSibling;
                 } else {
                     lastTurn = true;
+                    StartCoroutine(GameOver());
                    
                 }
             } else {
                 lastTurn = true;
+                StartCoroutine(GameOver());
                 
             }
             onPlay = false;
@@ -474,8 +486,6 @@ public class XMLReader : MonoBehaviour {
         
         
     }
-
-    
 
     private void RestartGame() {
         if (hasBoard) {
@@ -493,10 +503,16 @@ public class XMLReader : MonoBehaviour {
         }
     }
 
+    private IEnumerator GameOver() {
+        gameOverText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3);
+        gameOverText.gameObject.SetActive(false);
+    }
+
     private void OnClickPause() {
         Debug.Log("Pause clicked");
         if (hasBoard) {
-            if (!isRunning && !onPlay) {
+            if (!isRunning && !onPlay && !lastTurn) {
                 Ambient.Play();
                 StartCoroutine(PlayLoop());
             } else {
@@ -517,6 +533,7 @@ public class XMLReader : MonoBehaviour {
                         currTurn = currTurn.NextSibling;
                     } else {
                         lastTurn = true;
+                        StartCoroutine(GameOver());
                     }
                 }
             }
