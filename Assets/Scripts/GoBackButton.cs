@@ -5,20 +5,23 @@ using UnityEditor;
 public class GoBackButton : MonoBehaviour
 {
     public GameObject mainCamera;
-    public GameObject secondaryCamera;
     public Button button;
 
     void Start() {
-        button.onClick.AddListener(changeCamera);
+        button.onClick.AddListener(ChangeCamera);
     }
 
     void Update() {
        if(Input.GetKeyDown(KeyCode.Escape))
-         changeCamera();
+         ChangeCamera();
     }
 
-    void changeCamera() {
-        secondaryCamera.SetActive(false);
+    void ChangeCamera() {
+        Camera[] cameras = Camera.allCameras;
+        foreach (Camera cam in cameras)
+        {
+            cam.gameObject.SetActive(false);
+        }
         mainCamera.SetActive(true);
     }
 }

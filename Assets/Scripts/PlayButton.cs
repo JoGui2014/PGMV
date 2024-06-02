@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
+using System.IO;
+using System;
+using System.Xml;
 
 public class FileExplorer : MonoBehaviour
 {
@@ -21,9 +24,9 @@ public class FileExplorer : MonoBehaviour
     void OnClick()
     {
         // If xmlFilePath is null, allow selecting XML file
-        
+
         if (xmlFilePath == "")
-        {          
+        {
             OpenExplorer();
         } else
         {
@@ -38,7 +41,7 @@ public class FileExplorer : MonoBehaviour
         string path = UnityEditor.EditorUtility.OpenFilePanel("Open XML File", "", "xml");
 
         // Check if a file was selected
-        if (!string.IsNullOrEmpty(path) && IsXmlFile(path))
+        if (!string.IsNullOrEmpty(path) && IsXmlFile(path) && ValidateXmlWithDtd(path))
         {
             // Store the path
             xmlFilePath = path;
@@ -46,22 +49,52 @@ public class FileExplorer : MonoBehaviour
             SwitchToGameCamera(); // Switch camera after XML file is selected
         }
         else {
-            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido não é um arquivo XML válido.", "OK");
-            // Abre um painel de diálogo para escolher outro arquivo
+            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido nÃ£o Ã© um arquivo XML vÃ¡lido.", "OK");
+            // Abre um painel de diÃ¡logo para escolher outro arquivo
             //xmlFilePath = EditorUtility.OpenFilePanel("Selecionar arquivo XML", "", "xml");
         }
-        
+
     }
 
     bool IsXmlFile(string filePath)
     {
-        // Verifica a extensão do arquivo para determinar se é XML
+        // Verifica a extensÃ£o do arquivo para determinar se Ã© XML
         return filePath.ToLower().EndsWith(".xml");
+    }
+
+    bool ValidateXmlWithDtd(string xmlFilePath)
+    {
+        try
+        {
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.DtdProcessing = DtdProcessing.Parse;
+            settings.ValidationType = ValidationType.DTD;
+            settings.XmlResolver = new XmlUrlResolver();
+
+            using (FileStream xmlStream = new FileStream(xmlFilePath, FileMode.Open))
+            using (XmlReader reader = XmlReader.Create(xmlStream, settings))
+            {
+                while (reader.Read()) { }
+            }
+
+            Debug.Log("XML file is valid.");
+            return true;
+        }
+        catch (XmlException ex)
+        {
+            Debug.LogError("XML file is not valid: " + ex.Message);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("An error occurred: " + ex.Message);
+            return false;
+        }
     }
 
     void SwitchToGameCamera()
     {
-        secondaryCamera.SetActive(true);
         mainCamera.SetActive(false);
+        secondaryCamera.SetActive(true);
     }
 }

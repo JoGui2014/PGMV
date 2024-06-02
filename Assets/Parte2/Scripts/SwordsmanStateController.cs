@@ -14,6 +14,7 @@ public class SwordsmanStateController : MonoBehaviour
     int blockHash;
     int dieHash;
     int victoryHash;
+    int spAttackHash;
     bool toAttack = false;
     bool toDefend = false;
     bool toDie = false;
@@ -30,6 +31,7 @@ public class SwordsmanStateController : MonoBehaviour
         returnfromDodgeHash = Animator.StringToHash("ReturningFromDodge");
         victoryHash = Animator.StringToHash("Won");
         attackHash = Animator.StringToHash("Attacked");
+        spAttackHash = Animator.StringToHash("SpecialAttack");
 
         StartCoroutine(Battle());
     }
@@ -52,6 +54,7 @@ public class SwordsmanStateController : MonoBehaviour
 
             if (defendState == "die"){
                 yield return new WaitForSeconds(2f);
+                animatorAttack.SetBool(spAttackHash, false);
                 animatorAttack.SetBool(attackHash, false);
                 animatorAttack.SetBool(victoryHash, true);
                 running = false;
@@ -85,8 +88,10 @@ public class SwordsmanStateController : MonoBehaviour
 
     string generateAttack(){
         float decision =  Random.Range(0f,1f);
-        if (decision >= 0.0f && decision < 0.5f){
+        if (decision >= 0.0f && decision < 0.8f){
             return "attack";
+        }else if (decision >= 0.8f && decision < 0.9f){
+            return "specialAttack";
         }else{
             return "idle";
         }
@@ -96,9 +101,9 @@ public class SwordsmanStateController : MonoBehaviour
 
     string generateDefense(){
         float decision =  Random.Range(0f,1f);
-        if (decision >= 0.0f && decision < 0.33f){
+        if (decision >= 0.0f && decision < 0.75f){
             return "block";
-        }else if (decision >= 0.33f && decision < 0.66f){
+        }else if (decision >= 0.75f && decision < 0.9f){
             return "dodge";
         }else{
             return "die";
@@ -122,6 +127,10 @@ public class SwordsmanStateController : MonoBehaviour
                returningFromDodge = true;
                return defendAction;
            }
+        }else if (attackAction == "specialAttack"){
+            animatorAttack.SetBool(spAttackHash, true);
+            animatorDefend.SetBool(dieHash, true);
+            return "die";
         }
         return "idle";
     }
