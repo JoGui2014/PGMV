@@ -27,7 +27,8 @@ public class ProceduralTerrainGenerator : MonoBehaviour
 
     void Start()
     {
-        terrainType = PlayerPrefs.GetString("TerrainType", "default");
+        //terrainType = PlayerPrefs.GetString("TerrainType", "default");
+        terrainType = "desert";
         InitializeTerrainMaterials();
         GenerateTerrain();
         LoadEnvironmentFromXML(xmlFilePath);

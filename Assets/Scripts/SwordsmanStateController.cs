@@ -45,7 +45,7 @@ public class SwordsmanStateController : MonoBehaviour
             string defendDecision = generateDefense();
 
             if (toDie == true){
-                attackDecision = "attack"; //se for suposto ele morrer sempre que da return 
+                attackDecision = "attack";
                 defendDecision = "die";
             }
             string defendState = ResultFromTurn(attackDecision, defendDecision);
