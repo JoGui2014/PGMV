@@ -52,11 +52,11 @@ public class XMLReader : MonoBehaviour {
     private string playerName;
     private float boardDepth;
     private List<GameObject> gameObjects = new List<GameObject>();
+    private XmlNodeList turnsList;
 
 
     public void StartReadingXML(string xmlFilePath) {
         ReadXML(xmlFilePath);
-        numberTurns = 0;
     }
 
     void OnEnable(){
@@ -93,7 +93,7 @@ public class XMLReader : MonoBehaviour {
         try {
             xmlDoc.Load(xmlFilePath);
             XmlNode turnNodes = xmlDoc.SelectSingleNode("//turns");
-
+            turnsList = turnNodes.ChildNodes;
             firstTurn = turnNodes?.FirstChild;
             currTurn = firstTurn;
 
@@ -467,14 +467,13 @@ public class XMLReader : MonoBehaviour {
         while (!lastTurn && isRunning) {
             onPlay = true;
             if (currTurn != null) {
-                numberTurns += 1;
+                numberTurns = GetTurnNumber(currTurn);
                 yield return StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), false, line));
                 if (currTurn.NextSibling != null) {
                     currTurn = currTurn.NextSibling;
                 } else {
                     lastTurn = true;
-                    StartCoroutine(GameOver());
-                   
+                    StartCoroutine(GameOver());                   
                 }
             } else {
                 lastTurn = true;
@@ -489,7 +488,6 @@ public class XMLReader : MonoBehaviour {
 
     private void RestartGame() {
         if (hasBoard) {
-            Debug.Log("Restart clicked");
             isRunning = false;
             if(!onPlay) {
                 lastTurn = false;
@@ -510,7 +508,6 @@ public class XMLReader : MonoBehaviour {
     }
 
     private void OnClickPause() {
-        Debug.Log("Pause clicked");
         if (hasBoard) {
             if (!isRunning && !onPlay && !lastTurn) {
                 Ambient.Play();
@@ -522,12 +519,11 @@ public class XMLReader : MonoBehaviour {
     }
 
     private void OnClickForward() {
-        Debug.Log("Forward clicked");
         if (hasBoard) {
             isRunning = false;
             if(!onPlay){
                 if (currTurn != null && !lastTurn) {
-                    numberTurns += 1;
+                    numberTurns = GetTurnNumber(currTurn);
                     StartCoroutine(ProcessActions(currTurn.SelectNodes("./unit"), true, line));
                     if (currTurn.NextSibling != null) {
                         currTurn = currTurn.NextSibling;
@@ -541,18 +537,21 @@ public class XMLReader : MonoBehaviour {
     }
 
     private void OnClickBack() {
-        Debug.Log("Back clicked");
         if (hasBoard) {
             isRunning = false;
             if(!onPlay){
-                lastTurn = false;
-                numberTurns = Math.Max(1, numberTurns - 1);
-                turns.text = $"Nº Turns: {numberTurns}";
-                XmlNode previousTurn = currTurn?.PreviousSibling;
-                if (previousTurn.PreviousSibling != null) {
-                    currTurn = previousTurn;
+                if(lastTurn){
                     ProcessActionsBackwards(currTurn);
+                    lastTurn = false;
+                }else{
+                    XmlNode previousTurn = currTurn?.PreviousSibling;
+                    if (previousTurn.PreviousSibling != null) {
+                        currTurn = previousTurn;
+                        ProcessActionsBackwards(currTurn);
+                    }
                 }
+                numberTurns = GetTurnNumber(currTurn)-1; 
+                turns.text = $"Nº Turns: {numberTurns}";
             }
         }
     }
@@ -572,6 +571,8 @@ public class XMLReader : MonoBehaviour {
                 case "hold":
                     string id = unitNode.Attributes["id"].Value;
                     GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
+                    CharacterIdleMacro macro = piece.GetComponent<CharacterIdleMacro>();
+                    macro.Revive();
                     piece.SetActive(true);
                     break;
                 default:
@@ -598,5 +599,16 @@ public class XMLReader : MonoBehaviour {
         CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
         piece.transform.position = move_to_position;
         cim.SetCurPos(move_to_position);
+    }
+
+    int GetTurnNumber(XmlNode thisTurn){
+        for (int i = 0; i < turnsList.Count; i++)
+        {
+            if (turnsList[i] == thisTurn)
+            {
+                return i+1;
+            }
+        }
+        return -1;
     }
 }

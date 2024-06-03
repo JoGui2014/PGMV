@@ -63,6 +63,11 @@ public class CharacterIdleMacro : MonoBehaviour
         killed = true;
     }
 
+    public void Revive(){
+        killed = false;
+        character.transform.localScale = initial_scale;
+    }
+
     public void SetCurPos(Vector3 curPos){
         curr_pos = curPos;
     }
