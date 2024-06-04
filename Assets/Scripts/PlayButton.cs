@@ -7,16 +7,24 @@ using System.Xml;
 
 public class FileExplorer : MonoBehaviour
 {
-    public Button button; // Reference to your button in the scene
-    public string xmlFilePath; // Path to store the selected XML file
-    private XMLReader xmlReader; // Reference to your XML reader script
+    // Reference to the XMLReader script
+    private XMLReader xmlReader;
+    // Reference to the main camera and the board camera
     public GameObject mainCamera;
     public GameObject secondaryCamera;
+    // Reference to the button UI
+    public Button button; 
+    // Path to store the selected XML file
+    public string xmlFilePath; 
+  
 
     void Start()
     {
+        // Get the XMLReader component
         xmlReader = GetComponent<XMLReader>();
+        // Add a listener to the button to call the OnClick method when clicked
         button.onClick.AddListener(OnClick);
+        // Assures that when the game starts the main camera it's on and the board one it's off
         mainCamera.SetActive(true);
         secondaryCamera.SetActive(false);
     }
@@ -49,23 +57,23 @@ public class FileExplorer : MonoBehaviour
             SwitchToGameCamera(); // Switch camera after XML file is selected
         }
         else {
-            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido nÃ£o Ã© um arquivo XML vÃ¡lido.", "OK");
-            // Abre um painel de diÃ¡logo para escolher outro arquivo
-            //xmlFilePath = EditorUtility.OpenFilePanel("Selecionar arquivo XML", "", "xml");
+            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido não é um arquivo XML válido.", "OK");
         }
 
     }
 
     bool IsXmlFile(string filePath)
     {
-        // Verifica a extensÃ£o do arquivo para determinar se Ã© XML
+        // Verifies the extension of the file to determine if it's a XML
         return filePath.ToLower().EndsWith(".xml");
     }
 
+    // Method to validate the XML file using its DTD
     bool ValidateXmlWithDtd(string xmlFilePath)
     {
         try
         {
+            // Open the XML file and create an XmlReader with the specified settings
             XmlReaderSettings settings = new XmlReaderSettings();
             settings.DtdProcessing = DtdProcessing.Parse;
             settings.ValidationType = ValidationType.DTD;
@@ -74,6 +82,7 @@ public class FileExplorer : MonoBehaviour
             using (FileStream xmlStream = new FileStream(xmlFilePath, FileMode.Open))
             using (XmlReader reader = XmlReader.Create(xmlStream, settings))
             {
+                // Read the XML file to validate it
                 while (reader.Read()) { }
             }
 
@@ -92,6 +101,7 @@ public class FileExplorer : MonoBehaviour
         }
     }
 
+    // Method to switch from the main camera to the board camera
     void SwitchToGameCamera()
     {
         mainCamera.SetActive(false);

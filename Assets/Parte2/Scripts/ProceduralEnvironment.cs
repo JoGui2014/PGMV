@@ -5,34 +5,48 @@ using UnityEngine;
 
 public class ProceduralTerrainGenerator : MonoBehaviour
 {
+
+    // Path to the XML file containing environment data
     public string xmlFilePath = "Assets/Resources/environment_part_2.xml";
+
+    // Prefabs for different environmental elements
     public GameObject treePrefab;
     public GameObject rockPrefab;
     public GameObject housePrefab;
+
+    // Terrain parameters
     public int terrainResolution = 1024;
     private float terrainSize = 200;
 
+    // Materials for different terrain types
     public Material mountain;
     public Material village;
     public Material plain;
     public Material desert;
     public Material forest;
+
+    // Parent object to hold generated objects
     public GameObject parent;
 
+    // Terrain and terrain data
     private Terrain terrain;
     private TerrainData terrainData;
     private string terrainType;
 
+    // Dictionary to map terrain types to materials
     private Dictionary<string, Material> terrainMaterials;
 
     void Start()
     {
+        // Retrieve the terrain type from player preferences or use "default"
         terrainType = PlayerPrefs.GetString("TerrainType", "default");
+        // Invoke different methods
         InitializeTerrainMaterials();
         GenerateTerrain();
         LoadEnvironmentFromXML(xmlFilePath);
     }
 
+    // Initialize terrain materials dictionary
     void InitializeTerrainMaterials()
     {
         terrainMaterials = new Dictionary<string, Material>
@@ -45,23 +59,34 @@ public class ProceduralTerrainGenerator : MonoBehaviour
         };
     }
 
+    // Generate terrain
     void GenerateTerrain()
     {
+        // Create a new GameObject to hold the terrain
         GameObject terrainObject = new GameObject("ProceduralTerrain");
         terrainObject.transform.parent = parent.transform;
+
+        // Add Terrain component to the terrain GameObject
         terrain = terrainObject.AddComponent<Terrain>();
+
+        // Create new TerrainData and set its properties
         terrainData = new TerrainData
         {
             heightmapResolution = terrainResolution,
             size = new Vector3(terrainSize, terrainSize, terrainSize)
         };
+
+        // Assign TerrainData to the Terrain component
         terrain.terrainData = terrainData;
 
+        // Add TerrainCollider to the terrain GameObject
         TerrainCollider terrainCollider = terrainObject.AddComponent<TerrainCollider>();
         terrainCollider.terrainData = terrainData;
 
+        // Set terrain position to zero
         terrainObject.transform.position = Vector3.zero;
 
+        // Assign material based on terrain type
         if (terrainMaterials.ContainsKey(terrainType))
         {
             terrain.materialTemplate = terrainMaterials[terrainType];
@@ -73,153 +98,177 @@ public class ProceduralTerrainGenerator : MonoBehaviour
 
     }
 
+    // Load environment data from XML file
     void LoadEnvironmentFromXML(string path)
     {
+        // Load XML document
         XmlDocument xmlDoc = new XmlDocument();
         xmlDoc.Load(path);
-
+        
+        // Get list of "square" nodes from XML
         XmlNodeList squares = xmlDoc.GetElementsByTagName("square");
 
+        // Iterate through each square node
         foreach (XmlNode square in squares)
         {
             string type = square.Attributes["type"].Value;
-            if (type == terrainType){
+
+            // Process data if it matches the current terrain type
+            if (type == terrainType) {
+                // Extract maximum elevation for the square
                 float maxElevation = ParseFloat(square.Attributes["maximum_elevation"].Value);
 
+                // List to store object data
                 List<ObjectData> objects = new List<ObjectData>();
+
+                // Iterate through child nodes to get object data
                 foreach (XmlNode obj in square.ChildNodes)
                 {
+                    // Extract object type and densities for low and high altitudes
                     string objType = obj.Attributes["type"].Value;
                     float densityLow = ParseFloat(obj.Attributes["density_low_altitute"].Value);
                     float densityHigh = ParseFloat(obj.Attributes["density_high_altitute"].Value);
                     objects.Add(new ObjectData(objType, densityLow, densityHigh));
                 }
 
-
+                // Generate terrain heights based on the current type and maximum elevation and Place objects on the terrain
                 GenerateTerrainHeights(type, maxElevation);
                 PlaceObjects(objects, maxElevation);
             }
         }
     }
 
+    // Generate terrain heights based on type and maximum elevation
     void GenerateTerrainHeights(string type, float maxElevation)
     {
-    float[,] heights = new float[terrainResolution, terrainResolution];
-    float centerX = terrainResolution / 2;
-    float centerY = terrainResolution / 2;
-    float flatRadius = terrainResolution / 8; // Radius of the fully flat area
-    float blendRadius = terrainResolution / 2; // Radius of the blending area
-    float flatHeight = 0f; // Height of the flat area
+        // Initialize a 2D array to store terrain heights
+        float[,] heights = new float[terrainResolution, terrainResolution];
 
-    for (int x = 0; x < terrainResolution; x++)
-    {
-        for (int y = 0; y < terrainResolution; y++)
+        // Calculate center coordinates of the terrain
+        float centerX = terrainResolution / 2;
+        float centerY = terrainResolution / 2;
+        float flatRadius = terrainResolution / 8; // Radius of the fully flat area
+        float blendRadius = terrainResolution / 2; // Radius of the blending area
+        float flatHeight = 0f; // Height of the flat area
+
+        // Loop through each point in the terrain
+        for (int x = 0; x < terrainResolution; x++)
         {
-            float perlinHeight = (Mathf.PerlinNoise(x * 0.01f, y * 0.01f) +
+            for (int y = 0; y < terrainResolution; y++)
+            {
+                // Calculate Perlin noise to generate terrain height
+                float perlinHeight = (Mathf.PerlinNoise(x * 0.01f, y * 0.01f) +
                                   Mathf.PerlinNoise(x * 0.02f, y * 0.02f) * 0.5f) * maxElevation / terrainData.size.y;
 
-            // Calculate the distance from the center
-            float distance = Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY));
+                // Calculate the distance from the center
+                float distance = Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY));
 
-            if (distance < flatRadius)
-            {
-                // Fully flat area
-                heights[x, y] = flatHeight;
-            }
-            else if (distance < blendRadius)
-            {
-                // Blending area
-                float t = (distance - flatRadius) / (blendRadius - flatRadius); // Normalized distance within the blending area
-                float blendHeight = Mathf.Lerp(flatHeight, perlinHeight, t);
-                heights[x, y] = blendHeight;
-            }
-            else
-            {
-                // Outside blending area
-                heights[x, y] = perlinHeight;
+                if (distance < flatRadius)
+                {
+                    // Fully flat area
+                    heights[x, y] = flatHeight;
+                } else if (distance < blendRadius) {
+                    // Blending area
+                    float t = (distance - flatRadius) / (blendRadius - flatRadius); // Normalized distance within the blending area
+                    float blendHeight = Mathf.Lerp(flatHeight, perlinHeight, t);
+                    heights[x, y] = blendHeight;
+                } else {
+                    // Outside blending area
+                    heights[x, y] = perlinHeight;
+                }
             }
         }
-    }
-    terrainData.SetHeights(0, 0, heights);
+        // Set generated heights to the terrain data
+        terrainData.SetHeights(0, 0, heights);
     }
 
     void PlaceObjects(List<ObjectData> objects, float maxElevation)
-{
-    float lowAltitudeLimit = maxElevation * 0.2f;
-    float highAltitudeLimit = maxElevation * 0.8f;
-
-    int maxObjectsPerType = 1500; // Maximum number of objects per type
-    int placementStep = 35; // Controls spacing between placement checks
-
-    float centerX = terrainResolution / 2;
-    float centerY = terrainResolution / 2;
-    float flatRadius = terrainResolution / 8;
-
-    // Dictionary to keep track of the number of placed objects per type
-    Dictionary<string, int> placedObjectsCount = new Dictionary<string, int>();
-    // List to track positions of placed objects
-    List<Vector3> placedPositions = new List<Vector3>();
-
-    foreach (var objData in objects)
     {
-        placedObjectsCount[objData.type] = 0;
-    }
+        // Define altitude limits for object placement
+        float lowAltitudeLimit = maxElevation * 0.2f;
+        float highAltitudeLimit = maxElevation * 0.8f;
 
-    for (int x = 0; x < terrainResolution; x += placementStep)
-    {
-        for (int y = 0; y < terrainResolution; y += placementStep)
+        int maxObjectsPerType = 1500; // Maximum number of objects per type
+        int placementStep = 35; // Controls spacing between placement checks
+
+        // Calculate center coordinates of the terrain
+        float centerX = terrainResolution / 2;
+        float centerY = terrainResolution / 2;
+        float flatRadius = terrainResolution / 8;
+
+        // Dictionary to keep track of the number of placed objects per type
+        Dictionary<string, int> placedObjectsCount = new Dictionary<string, int>();
+        // List to track positions of placed objects
+        List<Vector3> placedPositions = new List<Vector3>();
+
+        // Initialize counts for each object type
+        foreach (var objData in objects)
         {
-            float normalizedHeight = terrainData.GetHeight(x, y) / maxElevation;
-            // Calculate the distance from the center
-            float distance = Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY));
+            placedObjectsCount[objData.type] = 0;
+        }
 
-            if (distance > flatRadius)
+        // Loop through terrain to place objects
+        for (int x = 0; x < terrainResolution; x += placementStep)
+        {
+            for (int y = 0; y < terrainResolution; y += placementStep)
             {
-                foreach (var objData in objects)
-                {
-                    if (placedObjectsCount[objData.type] >= maxObjectsPerType)
-                    {
-                        continue; // Skip this type if the maximum count has been reached
-                    }
+                // Get normalized height at current position and calculate the distance from the center
+                float normalizedHeight = terrainData.GetHeight(x, y) / maxElevation;
+                float distance = Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY));
 
-                    float density = (normalizedHeight < 0.2f) ? objData.densityLow :
+                // Place objects outside flat area
+                if (distance > flatRadius) {
+                    foreach (var objData in objects)
+                    {
+                        // Skip object type if the maximum count has been reached
+                        if (placedObjectsCount[objData.type] >= maxObjectsPerType)
+                        {
+                            continue; // Skip this type if the maximum count has been reached
+                        }
+
+                        // Determine object density based on terrain altitude
+                        float density = (normalizedHeight < 0.2f) ? objData.densityLow :
                                     (normalizedHeight > 0.8f) ? objData.densityHigh : 0f;
 
-                    if (Random.value < density)
-                    {
-                        float posX = x * (terrainSize / terrainResolution);
-                        float posZ = y * (terrainSize / terrainResolution);
-                        float posY = terrainData.GetHeight(x, y);
-
-                        Vector3 position = new Vector3(posX, posY, posZ);
-
-                        if (!IsOverlapping(position, placedPositions, 2.0f)) // Check for overlap within 2 units
+                        // Place object randomly based on density
+                        if (Random.value < density)
                         {
-                            Quaternion rotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+                            float posX = x * (terrainSize / terrainResolution);
+                            float posZ = y * (terrainSize / terrainResolution);
+                            float posY = terrainData.GetHeight(x, y);
 
-                            Instantiate(GetPrefab(objData.type), position, rotation, parent.transform);
+                            Vector3 position = new Vector3(posX, posY, posZ);
 
-                            placedPositions.Add(position); // Add the new position to the list
-                            placedObjectsCount[objData.type]++;
+                            // Check for overlap before placing object
+                            if (!IsOverlapping(position, placedPositions, 2.0f)) // Check for overlap within 2 units
+                            {
+                                // Instantiate object with random rotation
+                                Quaternion rotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+
+                                Instantiate(GetPrefab(objData.type), position, rotation, parent.transform);
+
+                                // Update placed objects count and positions list
+                                placedPositions.Add(position);
+                                placedObjectsCount[objData.type]++;
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 
-bool IsOverlapping(Vector3 position, List<Vector3> placedPositions, float minDistance)
-{
-    foreach (var placedPosition in placedPositions)
+    bool IsOverlapping(Vector3 position, List<Vector3> placedPositions, float minDistance)
     {
-        if (Vector3.Distance(position, placedPosition) < minDistance)
+        foreach (var placedPosition in placedPositions)
         {
-            return true; // The new position is too close to an existing object
+            if (Vector3.Distance(position, placedPosition) < minDistance)
+            {
+                return true; // The new position is too close to an existing object
+            }
         }
+        return false;
     }
-    return false;
-}
     GameObject GetPrefab(string type)
     {
         switch (type)
