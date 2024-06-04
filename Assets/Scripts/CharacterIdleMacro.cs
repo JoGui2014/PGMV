@@ -14,7 +14,7 @@ public class CharacterIdleMacro : MonoBehaviour
     // Private variables
     private Vector3 target;
     private float speed = 0.8f;
-    private float speed_rotate = 1.0f;
+    private float speed_rotate = 2.0f;
     private float speed_die = 0.3f;
     Vector3 dead_scale = new Vector3(0.00008f, 0.00008f, 0.00008f);
     private bool trace_path = false;

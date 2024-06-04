@@ -288,7 +288,27 @@ public class XMLReader : MonoBehaviour {
             if(skip) {
                 // Move the mage to the target position immediately and update the curr pos of the mage in the CharacterIdleMacro component
                 piece.transform.position = move_to_position;
-                cim.SetCurPos(move_to_position);
+
+                // Get the size of the terrain to determine the position within the quadrant
+                Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+                float halfWidth = terrainSize.x / 2;
+                float halfDepth = terrainSize.z / 2;
+                float offsetX = halfWidth / 2;
+                float offsetZ = halfDepth / 2;
+
+                // Determine the position within the quadrant
+                Vector3[] quadrantPositions = new Vector3[] {
+                    new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z - offsetZ),
+                    new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z - offsetZ),
+                    new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z + offsetZ),
+                    new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z + offsetZ)
+                };
+
+                // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
+                if (pieceCount < 4) {
+                    Vector3 movePosition = quadrantPositions[pieceCount]; 
+                    cim.SetCurPos(movePosition);
+                }
             } else {
                 // If the unit is of type "mage", perform a special movement animation (he will fly)
                 if(unit.Attributes["type"].Value == "mage") {
