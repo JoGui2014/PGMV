@@ -22,7 +22,6 @@ public class XMLReader : MonoBehaviour {
     public TMP_Text player;
     public TMP_Text turns;
     public TMP_Text gameOverText;
-    private bool waitForInput = true;
     [SerializeField] GameObject gameBoard;
     private XmlDocument xmlDoc = new XmlDocument();
     private XmlNode currTurn;
@@ -166,12 +165,14 @@ public class XMLReader : MonoBehaviour {
 
     void Move(XmlNode unit, bool skip) {
         string id = unit.Attributes["id"].Value;
-
+        float originalX = CharToTerrain[id].Item1;
+        float originalY = CharToTerrain[id].Item2;
         GameObject piece = gameBoard.transform.Find($"{id}")?.gameObject;
 
         if (piece != null) {
             float x = float.Parse(unit.Attributes["x"].Value);
             float y = float.Parse(unit.Attributes["y"].Value);
+            int pieceCount = GetCharactersInTerrain(x, y).Count;
             CharToTerrain[id] = (x,y);
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             Vector3 move_to_position = terrain.position;
@@ -180,15 +181,55 @@ public class XMLReader : MonoBehaviour {
                 piece.transform.position = move_to_position;
                 cim.SetCurPos(move_to_position);
             } else {
-                if(unit.Attributes["type"].Value == "mage")
-                   StartCoroutine(MoveWithJump(piece, move_to_position, 1.0f));
-                else{
-                   cim.SetTarget(move_to_position);
+                if(unit.Attributes["type"].Value == "mage"){
+                    cim.setHold(false);
+                    cim.spawnGhost();
+                    StartCoroutine(MoveWithJump(piece, move_to_position, 1.0f));
+                }else{
+                    cim.setHold(false);
+                    cim.spawnGhost();
+                    StartCoroutine(MoveToTarget(piece, move_to_position, originalX, originalY, pieceCount));
                 }
+            }
+        }
+    }
 
-                cim.setHold(false);
-                cim.spawnGhost();
-                cim.SetTarget(move_to_position);
+    IEnumerator MoveToTarget(GameObject piece, Vector3 targetPosition, float originalX, float originalY, int pieceCount) {
+        CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+        float x = originalX;
+        float y = originalY;
+        Transform terrain = gameBoard.transform.Find($"{x},{y}");
+        while (Vector3.Distance(piece.transform.position, terrain.position) > 0.01f){
+            cim.SetTarget(terrain.position);
+            yield return null;
+        }
+        Vector3 targetLatitude = new Vector3(piece.transform.position.x, piece.transform.position.y, terrain.position.z);
+        while (Vector3.Distance(piece.transform.position, targetLatitude) > 0.01f){
+            cim.SetTarget(targetLatitude);
+            yield return null;
+        }
+        while (Vector3.Distance(piece.transform.position, targetPosition) > 0.01f){
+            cim.SetTarget(targetPosition);
+            yield return null;
+        }
+        Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+        float halfWidth = terrainSize.x / 2;
+        float halfDepth = terrainSize.z / 2;
+        float offsetX = halfWidth / 2;
+        float offsetZ = halfDepth / 2;
+        // Determine the position within the quadrant
+        print(pieceCount);
+        Vector3[] quadrantPositions = new Vector3[] {
+            new Vector3(targetPosition.x - offsetX, targetPosition.y, targetPosition.z - offsetZ),
+            new Vector3(targetPosition.x + offsetX, targetPosition.y, targetPosition.z - offsetZ),
+            new Vector3(targetPosition.x - offsetX, targetPosition.y, targetPosition.z + offsetZ),
+            new Vector3(targetPosition.x + offsetX, targetPosition.y, targetPosition.z + offsetZ)
+        };
+        if (pieceCount < 4) {
+            Vector3 movePosition = quadrantPositions[pieceCount];
+            while (Vector3.Distance(piece.transform.position, movePosition) > 0.01f){
+                cim.SetTarget(movePosition);
+                yield return null;
             }
         }
     }
@@ -324,54 +365,55 @@ public class XMLReader : MonoBehaviour {
         if (prefab != null) {
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
             if (terrain != null) {
-                List<string> charsinthisterrain = GetCharactersInTerrain(x,y);
-                if(charsinthisterrain.Count < 4){
-                    Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-                    Vector3 terrainPosition = terrain.position;
-
-
-                    // Calculate the size of the piece's bounding box
-                    GameObject tempInstance = Instantiate(prefab);
-                    Renderer pieceRenderer = tempInstance.GetComponentInChildren<Renderer>();
-                    if (pieceRenderer == null) {
-                        Debug.LogWarning($"No Renderer found for the prefab type '{type}'.");
-                        Destroy(tempInstance);
-                        return;
-                    }
-                    Vector3 pieceSize = pieceRenderer.bounds.size;
-                    Destroy(tempInstance);
-
-                    // Generate random positions within the terrain bounds, adjusted for the piece size
-                    float halfPieceWidth = pieceSize.x / 2;
-                    float halfPieceDepth = pieceSize.y / 2;
-                    float randomX = UnityEngine.Random.Range(terrainPosition.x - terrainSize.x / 2 + halfPieceWidth, terrainPosition.x + terrainSize.x / 2 - halfPieceWidth);
-                    float randomY = terrainPosition.y + GetDepthByType(type);
-                    float randomZ = UnityEngine.Random.Range(terrainPosition.z - terrainSize.z / 2 + halfPieceDepth, terrainPosition.z + terrainSize.z / 2 - halfPieceDepth);
-
-                    Vector3 randomPosition = new Vector3(randomX, randomY, randomZ);
-
-                    GameObject instance = Instantiate(prefab, gameBoard.transform);
-                    CharacterIdleMacro character = instance.GetComponent<CharacterIdleMacro>();
-                    character.SetTeam(team);
-                    if (type == "catapult"){
-                        character.SetCatapult();
-                    }
-                    CharToTerrain.Add(id, (x,y));
-                    instance.transform.position = randomPosition;
-                    instance.transform.rotation = Quaternion.Euler(0, 0, 0);
-                    instance.transform.localScale = GetScaleByType(type);
-                    instance.name = unit.Attributes["id"].Value;
-                    instance.tag = type;
-                    gameObjects.Add(instance);
-                }else{
-                    Debug.LogWarning($"Terrain at position ({x},{y}) has already 4 pieces.");
+                if (TryPlacePiece(terrain, prefab, type, team, id, x, y)) {
+                    CharToTerrain.Add(id, (x, y));
                 }
-
             } else {
                 Debug.LogWarning($"Terrain at position ({x},{y}) not found.");
             }
         } else {
             Debug.LogWarning($"Prefab for type '{type}' not found.");
+        }
+    }
+
+    // New TryPlacePiece method
+    bool TryPlacePiece(Transform terrain, GameObject prefab, string type, string team, string id, float x, float y) {
+        Vector3 terrainPosition = terrain.position;
+        Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+        // Calculate the size of the four slices of the tile's terrain
+        float halfWidth = terrainSize.x / 2;
+        float halfDepth = terrainSize.z / 2;
+        float offsetX = halfWidth / 2;
+        float offsetZ = halfDepth / 2;
+        float terrainY = terrainPosition.y + GetDepthByType(type);
+        // Determine the position within the quadrant
+        int pieceCount = GetCharactersInTerrain(x, y).Count;
+        Vector3[] quadrantPositions = new Vector3[] {
+            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z - offsetZ),
+            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z - offsetZ),
+            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z + offsetZ),
+            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z + offsetZ)
+        };
+
+        if (pieceCount < 4) {
+            Vector3 spawnPosition = quadrantPositions[pieceCount];
+
+            GameObject instance = Instantiate(prefab, gameBoard.transform);
+            CharacterIdleMacro character = instance.GetComponent<CharacterIdleMacro>();
+            character.SetTeam(team);
+            if (type == "catapult") {
+                character.SetCatapult();
+            }
+            instance.transform.position = spawnPosition;
+            instance.transform.rotation = Quaternion.Euler(0, 0, 0);
+            instance.transform.localScale = GetScaleByType(type);
+            instance.name = id;
+            instance.tag = type;
+            gameObjects.Add(instance);
+            return true;
+        } else {
+            Debug.LogWarning($"Cannot place more than 4 characters on terrain at position ({x},{y}).");
+            return false;
         }
     }
 

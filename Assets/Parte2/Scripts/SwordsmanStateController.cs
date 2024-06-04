@@ -15,8 +15,6 @@ public class SwordsmanStateController : MonoBehaviour
     int dieHash;
     int victoryHash;
     int spAttackHash;
-    bool toAttack = false;
-    bool toDefend = false;
     bool toDie = false;
     bool returningFromDodge = false;
 

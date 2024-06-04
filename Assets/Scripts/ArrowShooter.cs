@@ -9,9 +9,7 @@ public class ArrowShooter : MonoBehaviour
 {
     public GameObject arrowPrefab; // Assign the arrow prefab in the Unity Editor
     public GameObject target; // Assign the target location in the Unity Editor
-    float time = 0;
     private float arrowSpeed = 0.5f;
-    private float raycastInterval = 0.1f;
     private Vector3 halfwayPoint;
 
     public void SetTarget(GameObject newTarget){
@@ -25,8 +23,6 @@ public class ArrowShooter : MonoBehaviour
     public void FixedUpdate()
     {
         if (target != null){
-            float distanceToTarget = Vector3.Distance(arrowPrefab.transform.position, target.transform.position);
-
             Shoot(halfwayPoint);
             halfwayPoint = Vector3.MoveTowards(halfwayPoint, target.transform.position, (arrowSpeed + 1.25f) * Time.deltaTime);
 

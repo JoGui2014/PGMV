@@ -14,7 +14,6 @@ public class CharacterIdleMacro : MonoBehaviour
     private float speed_rotate = 1.0f;
     private float speed_die = 0.3f;
     Vector3 dead_scale = new Vector3(0.00008f, 0.00008f, 0.00008f);
-    private float opacity = 0.1f;
     private bool trace_path = false;
     private bool killed = false;
     private bool rotated = false;
@@ -186,6 +185,7 @@ public class CharacterIdleMacro : MonoBehaviour
     }
 
     public void rotateCharacter(){
+      if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
              Vector3 relativePosition = target - character.transform.position;
              if (relativePosition != new Vector3(0f,0f,0f)){
@@ -194,14 +194,12 @@ public class CharacterIdleMacro : MonoBehaviour
                  character.transform.rotation = Quaternion.Lerp(character.transform.rotation, targetRotation, speed_rotate * Time.deltaTime);
 
                  if (Quaternion.Angle(character.transform.rotation, targetRotation) < 1.0f){
-                     if (!can_walk){
-                        target = new Vector3(0f,0f,0f);
-                     }
                      rotated = true;
                  }
              }
 
         }
+      }
     }
 
 
@@ -209,7 +207,7 @@ public class CharacterIdleMacro : MonoBehaviour
     public void moveCharacter() {
       if(can_walk){
         if (target != new Vector3(0f,0f,0f)){
-            //create_Path_object();
+            create_Path_object();
             Vector3 direction = (target - character.transform.position).normalized;
             character.transform.position += direction * speed * Time.deltaTime;
             if(Vector3.Distance(target, character.transform.position) <= 0.1f){
