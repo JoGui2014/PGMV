@@ -14,7 +14,7 @@ public class CharacterIdleMacro : MonoBehaviour
     // Private variables
     private Vector3 target;
     private float speed = 0.8f;
-    private float speed_rotate = 2.0f;
+    private float speed_rotate = 3.0f;
     private float speed_die = 0.3f;
     Vector3 dead_scale = new Vector3(0.00008f, 0.00008f, 0.00008f);
     private bool trace_path = false;
@@ -107,7 +107,7 @@ public class CharacterIdleMacro : MonoBehaviour
         if (rotated){
             MoveCharacter();
         }else{
-            RotateCharacter();
+            RotateCharacter(target);
         }
 
     }
@@ -197,7 +197,7 @@ public class CharacterIdleMacro : MonoBehaviour
     }
 
     // Method to initiate an attack on a target character
-    public void KillCharacter(GameObject target) {
+    public void KillCharacter(GameObject target, GameObject piece) {
         // Define the scale for the thrown object
         Vector3 scale = new Vector3(0.7f, 0.7f, 0.7f);
 
@@ -213,11 +213,11 @@ public class CharacterIdleMacro : MonoBehaviour
         }
         throwed.transform.localScale = scale; // Set the scale of the thrown object
         ArrowShooter shoot = throwed.GetComponent<ArrowShooter>(); // Get the ArrowShooter component and set the target
-        shoot.SetTarget(target);
+        shoot.SetTarget(target, piece);
     }
 
     // Method to rotate the character towards the target position
-    public void RotateCharacter() {
+    public void RotateCharacter(Vector3 target) {
         // Check if the character can walk and if there's a target position
         if(can_walk){
             if(target != new Vector3(0f,0f,0f)) {
@@ -227,7 +227,6 @@ public class CharacterIdleMacro : MonoBehaviour
                 if(relativePosition != new Vector3(0f,0f,0f)) {
                     Quaternion targetRotation = Quaternion.LookRotation(relativePosition);  // Calculate the target rotation towards the relative position
                     character.transform.rotation = Quaternion.Lerp(character.transform.rotation, targetRotation, speed_rotate * Time.deltaTime); // Interpolate the character's rotation towards the target rotation
-
                     // Check if the rotation angle is close to the target rotation
                     if(Quaternion.Angle(character.transform.rotation, targetRotation) < 1.0f){
                         rotated = true;

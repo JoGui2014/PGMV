@@ -7,7 +7,10 @@ using UnityEngine;
 
 public class ArrowShooter : MonoBehaviour
 {
+
+    
     // Reference to prefabs
+    public GameObject shooter;
     public GameObject arrowPrefab;
     public GameObject target;
 
@@ -18,7 +21,8 @@ public class ArrowShooter : MonoBehaviour
     private Vector3 halfwayPoint;
 
     // Sets the target for the arrow
-    public void SetTarget(GameObject newTarget){
+    public void SetTarget(GameObject newTarget, GameObject newShooter){
+        shooter = newShooter;
         target = newTarget;
         BoxCollider targetCollider = target.GetComponent<BoxCollider>();
         halfwayPoint = (target.transform.position + arrowPrefab.transform.position)/2;
@@ -29,6 +33,11 @@ public class ArrowShooter : MonoBehaviour
     public void FixedUpdate()
     {
         if (target != null) {
+            
+            // Make sure the character is looking in the right direction
+            CharacterIdleMacro cim = shooter.GetComponent<CharacterIdleMacro>();
+            cim.RotateCharacter(target.transform.position);
+
             // Shoot the arrow towards the halfway point
             Shoot(halfwayPoint);
 

@@ -286,9 +286,6 @@ public class XMLReader : MonoBehaviour {
 
             // If skipping animations (forward button is clicked)
             if(skip) {
-                // Move the mage to the target position immediately and update the curr pos of the mage in the CharacterIdleMacro component
-                piece.transform.position = move_to_position;
-
                 // Get the size of the terrain to determine the position within the quadrant
                 Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
                 float halfWidth = terrainSize.x / 2;
@@ -307,6 +304,7 @@ public class XMLReader : MonoBehaviour {
                 // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
                 if (pieceCount < 4) {
                     Vector3 movePosition = quadrantPositions[pieceCount]; 
+                    piece.transform.position = movePosition;
                     cim.SetCurPos(movePosition);
                 }
             } else {
@@ -315,8 +313,28 @@ public class XMLReader : MonoBehaviour {
                     // Release the hold state and spawn a ghost for the mage
                     cim.SetHold(false);
                     cim.SpawnGhost();
-                    // Start a coroutine to move the character with a jump animation
-                    StartCoroutine(MoveWithJump(piece, move_to_position, 1.0f));
+
+                    // Get the size of the terrain to determine the position within the quadrant
+                    Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+                    float halfWidth = terrainSize.x / 2;
+                    float halfDepth = terrainSize.z / 2;
+                    float offsetX = halfWidth / 2;
+                    float offsetZ = halfDepth / 2;
+
+                    // Determine the position within the quadrant
+                    Vector3[] quadrantPositions = new Vector3[] {
+                        new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z - offsetZ),
+                        new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z - offsetZ),
+                        new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z + offsetZ),
+                        new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z + offsetZ)
+                    };
+
+                    // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
+                    if (pieceCount < 4) {
+                        Vector3 movePosition = quadrantPositions[pieceCount]; 
+                        // Start a coroutine to move the character with a jump animation
+                        StartCoroutine(MoveWithJump(piece, movePosition, 1.0f));
+                    }
                 } else {
                     // Release the hold state and spawn a ghost for the unit
                     cim.SetHold(false);
@@ -476,7 +494,7 @@ public class XMLReader : MonoBehaviour {
                 } else {
                     // If the attacking character is not a soldier or the attack is not soldier-soldier, proceed with regular attack actions
                     PlaySoundByType(type);
-                    piece_attacking.KillCharacter(piece_attacked);
+                    piece_attacking.KillCharacter(piece_attacked, piece);
                 }
             }
         }
@@ -758,8 +776,10 @@ public class XMLReader : MonoBehaviour {
                     Destroy(game);
                 }
 
-                // Reset to the first turn and start playing loop again
+                // Reset to the first turn and start playing loop again 
                 currTurn = firstTurn;
+                line = 0;
+                CharToTerrain.Clear();
                 numberTurns = 0;
                 StartCoroutine(PlayLoop());
             }
