@@ -4,6 +4,9 @@ using UnityEditor;
 using System.IO;
 using System;
 using System.Xml;
+using SFB;
+
+
 
 public class FileExplorer : MonoBehaviour
 {
@@ -43,23 +46,36 @@ public class FileExplorer : MonoBehaviour
         }
     }
 
-    void OpenExplorer()
+  public void OpenExplorer()
     {
         // Open file explorer
-        string path = UnityEditor.EditorUtility.OpenFilePanel("Open XML File", "", "xml");
+        var paths = StandaloneFileBrowser.OpenFilePanel("Open XML File", "", "xml", false);
 
         // Check if a file was selected
-        if (!string.IsNullOrEmpty(path) && IsXmlFile(path) && ValidateXmlWithDtd(path))
+        if (paths.Length > 0)
         {
-            // Store the path
-            xmlFilePath = path;
-            xmlReader.StartReadingXML(xmlFilePath);
-            SwitchToGameCamera(); // Switch camera after XML file is selected
-        }
-        else {
-            EditorUtility.DisplayDialog("Aviso", "O arquivo fornecido não é um arquivo XML válido.", "OK");
-        }
+            string path = paths[0]; // Get the first selected file path
 
+            if (!string.IsNullOrEmpty(path) && IsXmlFile(path) && ValidateXmlWithDtd(path))
+            {
+                // Store the path
+                xmlFilePath = path;
+                xmlReader.StartReadingXML(xmlFilePath);
+                SwitchToGameCamera(); // Switch camera after XML file is selected
+            }
+            else
+            {
+                #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+                    Debug.Log("O arquivo fornecido não é um arquivo XML válido.");
+                #endif
+            }
+        }
+        else
+        {
+            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+                Debug.Log("Nenhum arquivo foi selecionado.");
+            #endif
+        }
     }
 
     bool IsXmlFile(string filePath)

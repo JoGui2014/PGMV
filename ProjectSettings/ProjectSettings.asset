@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: Grupo3_Daniel_Morgado_Guilherme_Louro_Rafael_Silva_Tiago_Felicio
   productName: ProjetoPGMV
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}

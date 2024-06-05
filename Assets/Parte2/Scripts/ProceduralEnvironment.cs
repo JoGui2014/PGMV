@@ -6,9 +6,6 @@ using UnityEngine;
 public class ProceduralTerrainGenerator : MonoBehaviour
 {
 
-    // Path to the XML file containing environment data
-    public string xmlFilePath = "Assets/Resources/environment_part_2.xml";
-
     // Prefabs for different environmental elements
     public GameObject treePrefab;
     public GameObject rockPrefab;
@@ -43,7 +40,7 @@ public class ProceduralTerrainGenerator : MonoBehaviour
         // Invoke different methods
         InitializeTerrainMaterials();
         GenerateTerrain();
-        LoadEnvironmentFromXML(xmlFilePath);
+        LoadEnvironmentFromXML();
     }
 
     // Initialize terrain materials dictionary
@@ -99,11 +96,19 @@ public class ProceduralTerrainGenerator : MonoBehaviour
     }
 
     // Load environment data from XML file
-    void LoadEnvironmentFromXML(string path)
+    void LoadEnvironmentFromXML()
     {
         // Load XML document
+        TextAsset xmlTextAsset = Resources.Load<TextAsset>("environment_part_2");
+        if (xmlTextAsset == null)
+        {
+            Debug.LogError($"Failed to load XML file");
+            return;
+        }
+
+        // Load XML document from the text
         XmlDocument xmlDoc = new XmlDocument();
-        xmlDoc.Load(path);
+        xmlDoc.LoadXml(xmlTextAsset.text);
         
         // Get list of "square" nodes from XML
         XmlNodeList squares = xmlDoc.GetElementsByTagName("square");
@@ -141,6 +146,11 @@ public class ProceduralTerrainGenerator : MonoBehaviour
     // Generate terrain heights based on type and maximum elevation
     void GenerateTerrainHeights(string type, float maxElevation)
     {
+        if (terrainData == null)
+        {
+            Debug.LogError("TerrainData is not initialized.");
+            return;
+        }
         // Initialize a 2D array to store terrain heights
         float[,] heights = new float[terrainResolution, terrainResolution];
 

@@ -279,7 +279,6 @@ public class XMLReader : MonoBehaviour {
 
             // Find the terrain game object corresponding to the target coordinates and calculate the position to move the character to
             Transform terrain = gameBoard.transform.Find($"{x},{y}");
-            Vector3 move_to_position = terrain.position;
 
             // Get the CharacterIdleMacro component attached to the unit game object
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
@@ -313,16 +312,19 @@ public class XMLReader : MonoBehaviour {
                     cim.SetHold(false);
                     cim.SpawnGhost();
                     // Start a coroutine to move the character to the target position
-                    StartCoroutine(MoveToTarget(piece, move_to_position, originalX, originalY, pieceCount));
+                    StartCoroutine(MoveToTarget(piece, terrain, originalX, originalY, pieceCount));
                 }
             }
         }
     }
 
     // Coroutine to move the characters to its target position with smooth movement
-    IEnumerator MoveToTarget(GameObject piece, Vector3 targetPosition, float originalX, float originalY, int pieceCount) {
+    IEnumerator MoveToTarget(GameObject piece, Transform targetTerrain, float originalX, float originalY, int pieceCount) {
         // Get the CharacterIdleMacro component attached to the unit game object
         CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+
+        //Get the target position
+        Vector3 targetPosition = targetTerrain.position;
 
         // Initialize variables for the original coordinates of the character
         float x = originalX;
@@ -350,7 +352,7 @@ public class XMLReader : MonoBehaviour {
         }
 
         //Get the positions of each quadrant
-        Vector3[] quadrantPositions = GetQuadrant(terrain, piece.tag);
+        Vector3[] quadrantPositions = GetQuadrant(targetTerrain, piece.tag);
 
         // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
         if (pieceCount < 4) {
@@ -465,7 +467,7 @@ public class XMLReader : MonoBehaviour {
                                 GameObject terrainObject = gameBoard.transform.Find($"{x},{y}")?.gameObject;
                                 PlayerPrefs.SetString("TerrainType", terrainObject.tag);
                                 changeSceneButton.gameObject.SetActive(true);
-                                yield return new WaitForSeconds(10);
+                                yield return new WaitForSeconds(5);
                                 changeSceneButton.gameObject.SetActive(false);
                             }
                         }
