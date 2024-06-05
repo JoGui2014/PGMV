@@ -29,6 +29,23 @@ public class CharacterIdleMacro : MonoBehaviour
     }
 
     public void moveCharacter() {
+<<<<<<< Updated upstream
         Character.transform.position = Vector3.MoveTowards(Character.transform.position, Target, speed * Time.deltaTime);
+=======
+      if(can_walk){
+        if (target != new Vector3(0f,0f,0f)){
+            create_Path_object();
+            Vector3 direction = (target - character.transform.position).normalized;
+            character.transform.position += direction * speed * Time.deltaTime;
+            if(Vector3.Distance(target, character.transform.position) <= 0.1f){
+                target = new Vector3(0f,0f,0f);
+                curr_pos = character.transform.position;
+                rotated = false;
+                Destroy(ghost);
+            }
+        }
+      }
+
+>>>>>>> Stashed changes
     }
 }
