@@ -284,23 +284,11 @@ public class XMLReader : MonoBehaviour {
             // Get the CharacterIdleMacro component attached to the unit game object
             CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
 
+            //Get the positions of each quadrant
+            Vector3[] quadrantPositions = GetQuadrant(terrain, piece.tag);
+            
             // If skipping animations (forward button is clicked)
             if(skip) {
-                // Get the size of the terrain to determine the position within the quadrant
-                Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-                float halfWidth = terrainSize.x / 2;
-                float halfDepth = terrainSize.z / 2;
-                float offsetX = halfWidth / 2;
-                float offsetZ = halfDepth / 2;
-
-                // Determine the position within the quadrant
-                Vector3[] quadrantPositions = new Vector3[] {
-                    new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z - offsetZ),
-                    new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z - offsetZ),
-                    new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z + offsetZ),
-                    new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z + offsetZ)
-                };
-
                 // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
                 if (pieceCount < 4) {
                     Vector3 movePosition = quadrantPositions[pieceCount]; 
@@ -313,21 +301,6 @@ public class XMLReader : MonoBehaviour {
                     // Release the hold state and spawn a ghost for the mage
                     cim.SetHold(false);
                     cim.SpawnGhost();
-
-                    // Get the size of the terrain to determine the position within the quadrant
-                    Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-                    float halfWidth = terrainSize.x / 2;
-                    float halfDepth = terrainSize.z / 2;
-                    float offsetX = halfWidth / 2;
-                    float offsetZ = halfDepth / 2;
-
-                    // Determine the position within the quadrant
-                    Vector3[] quadrantPositions = new Vector3[] {
-                        new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z - offsetZ),
-                        new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z - offsetZ),
-                        new Vector3(move_to_position.x - offsetX, move_to_position.y, move_to_position.z + offsetZ),
-                        new Vector3(move_to_position.x + offsetX, move_to_position.y, move_to_position.z + offsetZ)
-                    };
 
                     // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
                     if (pieceCount < 4) {
@@ -376,20 +349,8 @@ public class XMLReader : MonoBehaviour {
             yield return null;
         }
 
-        // Get the size of the terrain to determine the position within the quadrant
-        Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-        float halfWidth = terrainSize.x / 2;
-        float halfDepth = terrainSize.z / 2;
-        float offsetX = halfWidth / 2;
-        float offsetZ = halfDepth / 2;
-
-        // Determine the position within the quadrant
-        Vector3[] quadrantPositions = new Vector3[] {
-            new Vector3(targetPosition.x - offsetX, targetPosition.y, targetPosition.z - offsetZ),
-            new Vector3(targetPosition.x + offsetX, targetPosition.y, targetPosition.z - offsetZ),
-            new Vector3(targetPosition.x - offsetX, targetPosition.y, targetPosition.z + offsetZ),
-            new Vector3(targetPosition.x + offsetX, targetPosition.y, targetPosition.z + offsetZ)
-        };
+        //Get the positions of each quadrant
+        Vector3[] quadrantPositions = GetQuadrant(terrain, piece.tag);
 
         // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
         if (pieceCount < 4) {
@@ -399,6 +360,32 @@ public class XMLReader : MonoBehaviour {
                 yield return null;
             }
         }
+    }
+
+    //Get the positions of each quadrant
+    Vector3[] GetQuadrant(Transform terrain, string type){
+        // Get the size of the terrain to determine the position within the quadrant
+        Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
+        float halfWidth = terrainSize.x / 2;
+        float halfDepth = terrainSize.z / 2;
+        float offsetX = halfWidth / 2;
+        float offsetZ = halfDepth / 2;
+
+        // Get the position the terrain
+        Vector3 terrainPosition = terrain.position;
+
+        // Calculate the y-coordinate of the terrain
+        float terrainY = terrainPosition.y + GetDepthByType(type);
+
+        // Determine the position within the quadrant
+        Vector3[] quadrantPositions = new Vector3[] {
+            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z - offsetZ),
+            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z - offsetZ),
+            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z + offsetZ),
+            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z + offsetZ)
+        };
+        
+        return quadrantPositions;
     }
 
     // Coroutine to move the mage to its target position with a jumping animation (flying)
@@ -435,7 +422,6 @@ public class XMLReader : MonoBehaviour {
         // Set the mage's position to the final target position to ensure accuracy
         piece.transform.position = targetPosition;
     }
-
 
     // Coroutine to perform an attack action
     IEnumerator Attack(XmlNode unit, bool skip) {
@@ -616,29 +602,11 @@ public class XMLReader : MonoBehaviour {
 
     // Function to try placing a new game piece onto a terrain tile
     bool TryPlacePiece(Transform terrain, GameObject prefab, string type, string team, string id, float x, float y) {
-        // Get the position and size of the terrain
-        Vector3 terrainPosition = terrain.position;
-        Vector3 terrainSize = terrain.GetComponent<Renderer>().bounds.size;
-
-        // Calculate the size of the four slices of the tile's terrain
-        float halfWidth = terrainSize.x / 2;
-        float halfDepth = terrainSize.z / 2;
-        float offsetX = halfWidth / 2;
-        float offsetZ = halfDepth / 2;
-
-        // Calculate the y-coordinate of the terrain
-        float terrainY = terrainPosition.y + GetDepthByType(type);
-
         // Determine the position within the quadrant
         int pieceCount = GetCharactersInTerrain(x, y).Count;
 
-        // Determine the position within the quadrant
-        Vector3[] quadrantPositions = new Vector3[] {
-            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z - offsetZ),
-            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z - offsetZ),
-            new Vector3(terrainPosition.x - offsetX, terrainY, terrainPosition.z + offsetZ),
-            new Vector3(terrainPosition.x + offsetX, terrainY, terrainPosition.z + offsetZ)
-        };
+        //Get the positions of each quadrant
+        Vector3[] quadrantPositions = GetQuadrant(terrain, type);
 
         // Check if there is room to place the piece on the terrain
         if (pieceCount < 4) {
@@ -895,16 +863,33 @@ public class XMLReader : MonoBehaviour {
                 float x = float.Parse(unitNode.Attributes["x"].Value);
                 float y = float.Parse(unitNode.Attributes["y"].Value);
 
+                // Determine the number of pieces currently occupying the target terrain
+                int pieceCount = GetCharactersInTerrain(x, y).Count;
+
+                // Update the CharToTerrain dictionary with the new coordinates of the character
+                CharToTerrain[id] = (x,y);
+
                 // Find the terrain transform by coordinates and set the move-to position to the terrain position
                 Transform terrain = gameBoard.transform.Find($"{x},{y}");
                 move_to_position = terrain.position;
+
+                // Get the CharacterIdleMacro component attached to the unit game object
+                CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
+
+                //Get the positions of each quadrant
+                Vector3[] quadrantPositions = GetQuadrant(terrain, piece.tag);
+
+                // If there are less than 4 pieces in the terrain, move the character to a position within the quadrant
+                if (pieceCount < 4) {
+                    // Get the correct quadrant
+                    Vector3 movePosition = quadrantPositions[pieceCount]; 
+                    // Move the piece back to its previous position
+                    piece.transform.position = movePosition;
+                    // Update the current position in the CharacterIdleMacro component
+                    cim.SetCurPos(movePosition);
+                }
             }
         }
-        CharacterIdleMacro cim = piece.GetComponent<CharacterIdleMacro>();
-        // Move the piece back to its previous position
-        piece.transform.position = move_to_position; 
-        // Update the current position in the CharacterIdleMacro component
-        cim.SetCurPos(move_to_position);
     }
 
     // Get the turn number of the specified turn node
